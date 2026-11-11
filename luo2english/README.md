@@ -53,8 +53,9 @@ For HTTPS behind a local reverse proxy, set `NODE_ENV=production`, a strong
 `SESSION_SECRET`, `HOST=127.0.0.1`, and `TRUST_PROXY=loopback`. Configure the
 proxy to overwrite forwarded headers and use HTTPS. Set `DATABASE_URL` and keep
 `SESSION_SECRET` stable across restarts. Sessions are stored in PostgreSQL.
-An Nginx template for `www.swiftener.com` is in `deploy/nginx-luo2english.conf`;
-install a certificate and enable HTTP-to-HTTPS redirects before public use.
+An Nginx template for `www.swiftener.com` is in `deploy/nginx-luo2english.conf`.
+It redirects HTTP to HTTPS and expects the Let's Encrypt certificate at
+`/etc/letsencrypt/live/www.swiftener.com/`.
 
 ### Installation
 
