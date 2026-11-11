@@ -1,0 +1,14 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Muma Maler</p><h1>Create account</h1>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="/register" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Email<input type="email" name="email" value="<%= email %>" required autocomplete="email" maxlength="254"></label>
+    <label>Password<input type="password" name="password" required autocomplete="new-password" minlength="8"></label>
+    <label>Confirm password<input type="password" name="confirmation" required autocomplete="new-password" minlength="8"></label>
+    <button class="button">Create account</button>
+  </form>
+  <p>Already have an account? <a href="/login">Sign in</a>.</p>
+</section>
+<%- include('partials/footer') %>

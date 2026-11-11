@@ -1,0 +1,8 @@
+{
+  "name": "Wende Nyasaye",
+  "short_name": "Wende Nyasaye",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f5ef",
+  "theme_color": "#264d43"
+}

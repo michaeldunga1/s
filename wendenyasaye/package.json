@@ -1,0 +1,23 @@
+{
+  "name": "wendenyasaye",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Dholuo hymnal directory",
+  "scripts": {
+    "start": "node app.js",
+    "create-admin": "node scripts/create-admin.js",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
+    "ejs": "^7.0.2",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "pg": "^8.16.3"
+  }
+}

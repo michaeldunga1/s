@@ -1,0 +1,24 @@
+<% if (!chapters.length) { %>
+  <p class="empty">No bookmarks yet. Open a chapter to add one.</p>
+<% } else { %>
+  <%- include('search', { label: 'Search bookmarks', placeholder: 'Book, chapter, title, note or tags', searchId: 'search-bookmarks' }) %>
+  <div class="list" data-search-list>
+    <% chapters.forEach(chapter => { %>
+      <div class="admin-row" data-search-item data-search-text="<%= `${chapter.book_name} ${chapter.number} ${chapter.title} ${chapter.note} ${chapter.tags}` %>">
+        <svg class="icon saved-icon" aria-hidden="true"><use href="/icons.svg#bookmark"></use></svg>
+        <div class="row-title">
+          <a href="/books/<%= encodeURIComponent(chapter.book_slug) %>/chapters/<%= encodeURIComponent(chapter.chapter_slug) %>"><%= chapter.book_name %> <%= chapter.number %><%= chapter.title ? ': ' + chapter.title : '' %></a>
+          <% if (chapter.note) { %><p class="bookmark-note"><%= chapter.note %></p><% } %>
+          <% if (chapter.tags) { %><p class="bookmark-tags"><strong>Tags:</strong> <%= chapter.tags %></p><% } %>
+        </div>
+        <a href="/books/<%= encodeURIComponent(chapter.book_slug) %>/chapters/<%= encodeURIComponent(chapter.chapter_slug) %>/bookmark/edit">Edit</a>
+        <form method="post" action="/books/<%= encodeURIComponent(chapter.book_slug) %>/chapters/<%= encodeURIComponent(chapter.chapter_slug) %>/saved/bookmarks">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input type="hidden" name="action" value="remove">
+          <input type="hidden" name="from" value="<%= from %>">
+          <button class="danger" aria-label="Remove <%= chapter.book_name %> <%= chapter.number %> from bookmarks">Remove</button>
+        </form>
+      </div>
+    <% }); %>
+  </div>
+<% } %>

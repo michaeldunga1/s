@@ -1,0 +1,8 @@
+<div class="list-search" data-list-search hidden>
+  <label for="<%= typeof searchId === 'undefined' ? 'list-search' : searchId %>"><%= label %></label>
+  <div class="search-input">
+    <svg class="icon" aria-hidden="true"><use href="/icons.svg#search"></use></svg>
+    <input id="<%= typeof searchId === 'undefined' ? 'list-search' : searchId %>" type="search" autocomplete="off" placeholder="<%= placeholder %>">
+  </div>
+  <p class="search-status muted" role="status" aria-live="polite"></p>
+</div>

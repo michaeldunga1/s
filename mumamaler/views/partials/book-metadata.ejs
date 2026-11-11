@@ -1,0 +1,7 @@
+<% if (book.testament === 'old' || book.testament === 'new') { %>
+  <a href="/testaments/<%= book.testament %>"><%= book.testament === 'old' ? 'Old Testament' : 'New Testament' %></a>
+<% } else { %>
+  Testament not set
+<% } %>
+<% if (book.author) { %> &middot; Author: <a href="/authors/<%= encodeURIComponent(book.author_slug) %>"><%= book.author %></a><% } %>
+<% if (book.category) { %> &middot; Category: <a href="/categories/<%= encodeURIComponent(book.category_slug) %>"><%= book.category %></a><% } %>

@@ -1,0 +1,61 @@
+<%- include('partials/header') %>
+<section class="hero">
+  <div class="hero-copy">
+  <p class="eyebrow">A Dholuo hymnal companion</p>
+  <h1>Wende Nyasaye</h1>
+  <p>Find a hymn, read its words, and keep your favorites close.</p>
+  <a class="text-link" href="<%= reference %>" target="_blank" rel="noopener noreferrer">Browse the full reference collection &rarr;</a>
+  </div>
+  <div class="hero-illustration" aria-hidden="true"><svg class="icon"><use href="/icons.svg#music"></use></svg></div>
+</section>
+<section aria-labelledby="directory-title">
+  <div class="section-heading">
+    <div><p class="eyebrow">Your songbook</p><h2 id="directory-title">Hymn directory</h2></div>
+    <span class="count"><%= hymns.length %> saved</span>
+  </div>
+  <form method="get" action="/" class="toolbar">
+    <% if (query) { %><input type="hidden" name="q" value="<%= query %>"><% } %>
+    <label>Category
+      <select name="category">
+        <option value="">All categories</option>
+        <% categories.forEach(category => { %><option value="<%= category.id %>" <%= selectedCategory === String(category.id) ? 'selected' : '' %>><%= category.name %></option><% }); %>
+      </select>
+    </label>
+    <button class="button button-secondary" type="submit">Show hymns</button>
+  </form>
+  <form method="get" action="/" class="toolbar">
+    <% if (selectedCategory) { %><input type="hidden" name="category" value="<%= selectedCategory %>"><% } %>
+    <label class="search">Search hymns, lyrics, authors or categories
+      <input id="search" name="q" type="search" value="<%= query %>" maxlength="200" placeholder="Search hymns" autocomplete="off">
+    </label>
+    <button class="button" type="submit">Search</button>
+    <% if (query) { %><a href="<%= selectedCategory ? `/?category=${selectedCategory}` : '/' %>">Clear search</a><% } %>
+  </form>
+  <% if (query) { %><p class="hint">Live filtering searches these results. Submit a new search to search the full directory<%= selectedCategory ? ' in this category' : '' %>.</p><% } %>
+  <% if (user) { %>
+    <label class="filter"><input type="checkbox" id="favorites-only"> Favorites only</label>
+    <span id="favorite-data" hidden data-favorites="<%= JSON.stringify(favorites) %>"></span>
+  <% } %>
+  <% if (!user) { %><p class="hint"><a href="/login">Sign in</a> to save your favorite hymns.</p><% } %>
+  <div id="hymn-list" class="hymn-list">
+    <% hymns.forEach(hymn => { %>
+      <article class="hymn" data-search="<%= [hymn.title, hymn.number, hymn.page_number, hymn.author, hymn.composer, hymn.lyrics, ...hymn.categories.map(category => category.name)].filter(value => value != null).join('\n') %>" data-favorite="<%= favorites.includes(hymn.id) %>">
+        <div class="hymn-number"><%= hymn.number || '♪' %></div>
+        <div class="hymn-details">
+          <h3><a href="/hymns/<%= encodeURIComponent(hymn.slug) %>"><%= hymn.title %></a></h3>
+          <%- include('partials/hymn-metadata', { hymn, composerNames }) %>
+          <a href="/hymns/<%= encodeURIComponent(hymn.slug) %>">Read hymn &rarr;</a>
+        </div>
+        <% if (user) { const saved = favorites.includes(hymn.id); %>
+          <form method="post" action="/favorites/<%= hymn.id %>">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input type="hidden" name="action" value="<%= saved ? 'remove' : 'add' %>">
+            <button class="favorite <%= saved ? 'is-saved' : '' %>" type="submit" aria-label="<%= saved ? 'Remove' : 'Add' %> <%= hymn.title %> <%= saved ? 'from' : 'to' %> favorites"><%= saved ? '★' : '☆' %></button>
+          </form>
+        <% } %>
+      </article>
+    <% }); %>
+  </div>
+  <p id="empty" class="empty" role="status" <%= hymns.length ? 'hidden' : '' %>>No hymns found.</p>
+</section>
+<%- include('partials/footer') %>

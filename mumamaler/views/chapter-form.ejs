@@ -1,0 +1,16 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow"><%= book.name %></p><h1><%= title %></h1>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="<%= action %>" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Chapter title<input name="chapter_title" value="<%= chapter.title || '' %>" maxlength="200" required></label>
+    <label>Chapter number<input name="number" type="number" min="1" step="1" value="<%= chapter.number || '' %>" required></label>
+    <label for="chapter-body">Chapter body</label>
+    <p class="muted" id="chapter-help">Enter the entire chapter. Line breaks and verse numbers are preserved as entered.</p>
+    <textarea id="chapter-body" name="body" rows="16" maxlength="120000" required aria-describedby="chapter-help"><%= chapter.body || '' %></textarea>
+    <button class="button">Save chapter</button>
+    <a href="/admin/books/<%= book.id %>/chapters">Cancel</a>
+  </form>
+</section>
+<%- include('partials/footer') %>

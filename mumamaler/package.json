@@ -1,0 +1,24 @@
+{
+  "name": "mumamaler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Luo Bible reader",
+  "scripts": {
+    "start": "node app.js",
+    "create-admin": "node scripts/create-admin.js",
+    "test": "node --test",
+    "test:postgres": "node --test test/postgres.test.js"
+  },
+  "engines": { "node": ">=22" },
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "connect-pg-simple": "^10.0.0",
+    "ejs": "^7.0.2",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "better-sqlite3": "^13.0.3"
+  }
+}

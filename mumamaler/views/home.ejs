@@ -1,0 +1,23 @@
+<%- include('partials/header') %>
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">The Bible in Dholuo</p>
+    <h1>Muma Maler</h1>
+    <p>Read the Bible, one book and chapter at a time.</p>
+    <a class="hero-link" href="#books">Explore the books <svg class="icon" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg></a>
+  </div>
+  <div class="hero-illustration" aria-hidden="true"><svg class="icon"><use href="/icons.svg#book"></use></svg></div>
+</section>
+<form method="get" action="/search" class="scripture-search">
+  <label for="scripture-search">Search chapter text</label>
+  <div class="search-controls"><input id="scripture-search" type="search" name="q" maxlength="200" placeholder="Search scripture" required><button class="button" type="submit">Search</button></div>
+</form>
+<section id="books">
+  <div class="heading"><div><p class="eyebrow">Explore scripture</p><h2>Books of the Bible</h2></div><span class="muted"><%= books.length %> books</span></div>
+  <% if (!books.length) { %>
+    <p class="empty">No books have been added yet. An administrator can add books and chapters.</p>
+  <% } else { %>
+    <%- include('partials/book-list', { books }) %>
+  <% } %>
+</section>
+<%- include('partials/footer') %>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand">
+        <a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a>
+      </div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <% if (user && user.role === 'admin') { %>
+          <li><a href="/admin">Admin</a></li>
+          <li><a href="/admin/users">Users</a></li>
+        <% } %>
+        <li><a href="/profile" aria-current="page">Profile</a></li>
+        <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+        <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="card" style="max-width: 600px; margin: 3rem auto;">
+      <div class="card-header">My Profile</div>
+      <dl>
+        <dt>Username</dt>
+        <dd><%= profile.username %></dd>
+        <dt>Email</dt>
+        <dd><%= profile.email %></dd>
+        <dt>Role</dt>
+        <dd><%= profile.role %></dd>
+        <dt>Member since</dt>
+        <dd><%= profile.created_at %></dd>
+      </dl>
+    </div>
+  </main>
+
+  <%- include('partials/legal-footer') %>
+</body>
+</html>

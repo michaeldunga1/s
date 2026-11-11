@@ -1,0 +1,20 @@
+<%- include('partials/header') %>
+<div class="heading">
+  <div><p class="eyebrow">Explore scripture</p><h1><%= title %></h1></div>
+  <span class="muted"><%= items.length %> <%= title.toLowerCase() %></span>
+</div>
+<% if (!items.length) { %>
+  <p class="empty">No <%= title.toLowerCase() %> have been added yet.</p>
+<% } else { %>
+  <%- include('partials/search', { label: `Search ${title.toLowerCase()}`, placeholder: `Search ${title.toLowerCase()}` }) %>
+  <div class="grid" data-search-list>
+    <% items.forEach(item => { %>
+      <a class="directory-card" href="<%= path %>/<%= encodeURIComponent(item.slug) %>" data-search-item data-search-text="<%= [item.name, item.description || ''].join(' ') %>">
+        <strong><%= item.name %></strong>
+        <% if (item.description) { %><span><%= item.description %></span><% } %>
+        <small><%= item.book_count %> book<%= item.book_count === 1 ? '' : 's' %></small>
+      </a>
+    <% }); %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

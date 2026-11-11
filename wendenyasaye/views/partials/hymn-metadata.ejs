@@ -1,0 +1,4 @@
+<% if (hymn.author) { %><p>By <a href="/authors/<%= hymn.author_id %>"><%= hymn.author %></a></p><% } %>
+<% if (hymn.composer) { %><p>Composer: <% composerNames(hymn.composer).forEach((name, index) => { %><%= index ? '; ' : '' %><a href="/composers?name=<%= encodeURIComponent(name) %>"><%= name %></a><% }); %></p><% } %>
+<% if (hymn.page_number) { %><p>Page <%= hymn.page_number %></p><% } %>
+<% if (hymn.categories.length) { %><p>Categories: <% hymn.categories.forEach((category, index) => { %><%= index ? ', ' : '' %><a href="/?category=<%= category.id %>"><%= category.name %></a><% }); %></p><% } %>

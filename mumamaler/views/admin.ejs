@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<div class="heading"><div><p class="eyebrow">Admin panel</p><h1>Manage Bible</h1></div><a class="button" href="/admin/books/new">Add book</a></div>
+<p><a href="/admin/schema">View database schema</a> · <a href="/admin/readers">Manage users</a></p>
+<p>Add books, then enter their chapters.</p>
+<% if (!books.length) { %><p class="empty">No books yet. Add a book to get started.</p><% } %>
+<% if (books.length) { %><%- include('partials/search', { label: 'Search books', placeholder: 'Book name, author, category or index' }) %><% } %>
+<div class="list" data-search-list>
+  <% books.forEach(book => { %>
+    <div class="admin-row" data-search-item data-search-text="<%= [book.name, book.book_order, book.author, book.category, book.testament === 'old' ? 'Old Testament' : book.testament === 'new' ? 'New Testament' : ''].filter(value => value != null).join(' ') %>">
+      <div class="row-title"><strong><%= book.book_order %>. <%= book.name %></strong><small><%- include('partials/book-metadata', { book }) %> · <%= book.chapter_count %> chapters</small></div>
+      <a href="/admin/books/<%= book.id %>/chapters">Chapters</a>
+      <a href="/admin/books/<%= book.id %>/edit">Edit</a>
+      <form method="post" action="/admin/books/<%= book.id %>/delete" onsubmit="return confirm('Delete this book and all its chapters?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Delete</button></form>
+    </div>
+  <% }); %>
+</div>
+<%- include('partials/footer') %>

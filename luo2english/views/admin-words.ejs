@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <li><a href="/admin">Admin</a></li>
+        <li><a href="/admin/users">Users</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+        <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="admin-header">
+      <h1 class="admin-title">Manage Words</h1>
+      <a href="/admin/words/new" class="btn btn-primary">+ Add Word</a>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Word</th>
+          <th>Definition</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% words.forEach(word => { %>
+          <tr>
+            <td><strong><%= word.word %></strong></td>
+            <td style="white-space: pre-wrap;"><%= word.definition || 'No definition yet' %></td>
+            <td>
+              <a href="/word/<%= word.id %>" class="btn-link" style="color: #D4A574;">View</a>
+              <a href="/admin/words/<%= word.id %>/edit" class="btn-link" style="color: #D4A574;">Edit</a>
+              <form method="POST" action="/admin/words/<%= word.id %>/delete" style="display: inline;">
+                <button type="submit" class="btn-link" style="color: #C9453A; cursor: pointer; border: none; background: none; padding: 0;" onclick="return confirm('Delete this word?')">Delete</button>
+              </form>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  </div>
+
+  <%- include('partials/legal-footer') %>
+</body>
+</html>

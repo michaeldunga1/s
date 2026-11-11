@@ -1,0 +1,25 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Admin</p><h1><%= title %></h1>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="<%= action %>" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Book name<input name="name" value="<%= book.name %>" maxlength="200" required></label>
+    <label>Book index<input name="book_order" type="number" min="1" step="1" value="<%= book.book_order %>" required></label>
+    <p class="muted">Use the position of this book in the Bible. Each book must have a unique index.</p>
+    <label>Testament
+      <select name="testament" required>
+        <option value="">Select a testament</option>
+        <option value="old" <%= book.testament === 'old' ? 'selected' : '' %>>Old Testament</option>
+        <option value="new" <%= book.testament === 'new' ? 'selected' : '' %>>New Testament</option>
+      </select>
+    </label>
+    <label>Author (optional)<input name="author" value="<%= book.author || '' %>" maxlength="200" list="authors"></label>
+    <datalist id="authors"><% authors.forEach(author => { %><option value="<%= author.name %>"><% }); %></datalist>
+    <label>Category (optional)<input name="category" value="<%= book.category || '' %>" maxlength="200" list="categories"></label>
+    <datalist id="categories"><% categories.forEach(category => { %><option value="<%= category.name %>"><% }); %></datalist>
+    <button class="button">Save book</button>
+    <a href="/admin">Cancel</a>
+  </form>
+</section>
+<%- include('partials/footer') %>

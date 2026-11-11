@@ -1,0 +1,29 @@
+<%- include('partials/header') %>
+<p class="breadcrumb"><a href="/">Books</a> / <a href="/books/<%= encodeURIComponent(book.slug) %>"><%= book.name %></a> / <%= chapter.number %></p>
+<article class="reader">
+  <p class="eyebrow">Chapter <%= chapter.number %></p>
+  <h1><%= chapter.title || `${book.name} ${chapter.number}` %></h1>
+  <% if (reader) { %>
+    <div class="chapter-actions">
+        <form method="post" action="/books/<%= encodeURIComponent(book.slug) %>/chapters/<%= encodeURIComponent(chapter.slug) %>/saved/bookmarks">
+          <input type="hidden" name="_csrf" value="<%= csrf %>">
+          <input type="hidden" name="action" value="<%= bookmark ? 'remove' : 'add' %>">
+          <button class="button"><svg class="icon" aria-hidden="true"><use href="/icons.svg#bookmark"></use></svg> <%= bookmark ? 'Remove Bookmark' : 'Add Bookmark' %></button>
+        </form>
+        <% if (bookmark) { %><a class="button button-secondary" href="/books/<%= encodeURIComponent(book.slug) %>/chapters/<%= encodeURIComponent(chapter.slug) %>/bookmark/edit"><svg class="icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg> Edit bookmark</a><% } %>
+    </div>
+  <% } else { %>
+    <p><a href="/login">Sign in</a> or <a href="/register">create an account</a> to bookmark this chapter.</p>
+  <% } %>
+  <% if (chapter.body.trim()) { %>
+    <div class="verse"><%= chapter.body %></div>
+  <% } else { %>
+    <p class="empty">The chapter text has not been added yet.</p>
+  <% } %>
+  <nav class="chapter-nav" aria-label="Chapter navigation">
+    <% if (previous) { %><a href="/books/<%= encodeURIComponent(book.slug) %>/chapters/<%= encodeURIComponent(previous.slug) %>">&larr; Chapter <%= previous.number %></a><% } %>
+    <a href="/books/<%= encodeURIComponent(book.slug) %>">All chapters</a>
+    <% if (next) { %><a href="/books/<%= encodeURIComponent(book.slug) %>/chapters/<%= encodeURIComponent(next.slug) %>">Chapter <%= next.number %> &rarr;</a><% } %>
+  </nav>
+</article>
+<%- include('partials/footer') %>

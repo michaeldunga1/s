@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow"><%= self ? 'Your account' : 'Admin panel' %></p>
+  <h1><%= title %></h1>
+  <p>Permanently delete <strong><%= account.email %></strong> and all of this account's bookmarks, notes and tags. This cannot be undone.</p>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="<%= self ? '/profile/delete' : `/admin/readers/${account.id}/delete` %>" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <% if (self) { %>
+      <label>Confirm your password<input type="password" name="password" autocomplete="current-password" required></label>
+    <% } else { %>
+      <input type="hidden" name="accountToken" value="<%= accountToken %>">
+    <% } %>
+    <label class="confirmation"><input type="checkbox" name="confirm" value="delete" required> I understand this deletion is permanent.</label>
+    <button class="button">Permanently delete account</button>
+  </form>
+  <p><a href="<%= self ? '/profile' : '/admin/readers' %>">Cancel</a></p>
+</section>
+<%- include('partials/footer') %>

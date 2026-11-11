@@ -1,0 +1,24 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Admin</p>
+  <h1>Manage categories</h1>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="/admin/categories" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>New category<input name="name" value="<%= name %>" maxlength="100" required></label>
+    <button class="button" type="submit">Add category</button>
+  </form>
+  <h2>Categories</h2>
+  <div class="hymn-list">
+    <% categories.forEach(category => { %>
+      <div class="hymn">
+        <div class="hymn-details"><strong><a href="/?category=<%= category.id %>"><%= category.name %></a></strong><p><%= category.hymn_count %> hymns</p></div>
+        <a href="/admin/categories/<%= category.id %>/edit">Edit</a>
+        <a class="danger" href="/admin/categories/<%= category.id %>/delete">Delete</a>
+      </div>
+    <% }); %>
+    <% if (!categories.length) { %><p class="empty">No categories yet.</p><% } %>
+  </div>
+  <p><a href="/admin">Back to admin</a></p>
+</section>
+<%- include('partials/footer') %>

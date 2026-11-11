@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Bookmark</p>
+  <h1>Edit bookmark</h1>
+  <p><a href="/hymns/<%= encodeURIComponent(bookmark.slug) %>"><%= bookmark.title %></a></p>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="/bookmarks/<%= bookmark.id %>/edit" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Note<textarea name="note" rows="5" maxlength="5000"><%= bookmark.note %></textarea></label>
+    <label>Tags (comma-separated)<input type="text" name="tags" maxlength="500" value="<%= bookmark.tags %>"></label>
+    <button class="button" type="submit">Save bookmark</button>
+  </form>
+  <p><a href="/profile">Back to profile</a></p>
+</section>
+<%- include('partials/footer') %>

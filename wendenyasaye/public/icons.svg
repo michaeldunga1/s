@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="music" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13M9 9l10-2"/><ellipse cx="6.5" cy="18.5" rx="2.5" ry="1.5"/><ellipse cx="16.5" cy="16.5" rx="2.5" ry="1.5"/></symbol>
+  <symbol id="bookmark" viewBox="0 0 24 24"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4z"/></symbol>
+  <symbol id="edit" viewBox="0 0 24 24"><path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20zm9.5-12.5 3 3"/></symbol>
+  <symbol id="share" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="19" r="2"/><path d="m8 11 8-5M8 13l8 5"/></symbol>
+</svg>

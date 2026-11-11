@@ -1,0 +1,29 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Admin</p>
+  <h1><%= title %></h1>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="<%= action %>" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Title<input name="title" value="<%= hymn.title %>" required maxlength="200"></label>
+    <label>Hymn number (optional)<input name="number" type="number" min="1" step="1" value="<%= hymn.number || '' %>"></label>
+    <label>Page number (optional)<input name="page_number" type="number" min="1" step="1" value="<%= hymn.page_number || '' %>"></label>
+    <label>Composer (optional)<input name="composer" value="<%= hymn.composer || '' %>" maxlength="500"></label>
+    <label>Author (optional)<input name="author" value="<%= hymn.author || '' %>" maxlength="200" list="authors"></label>
+    <datalist id="authors">
+      <% authors.forEach(author => { %><option value="<%= author.name %>"><% }); %>
+    </datalist>
+    <fieldset class="category-options">
+      <legend>Categories</legend>
+      <% categories.forEach(category => { %>
+        <label><input type="checkbox" name="categories" value="<%= category.id %>" <%= selectedCategories.includes(String(category.id)) ? 'checked' : '' %>> <%= category.name %></label>
+      <% }); %>
+      <% if (!categories.length) { %><p>No categories available.</p><% } %>
+      <a href="/admin/categories">Manage categories</a>
+    </fieldset>
+    <label>Lyrics<textarea name="lyrics" <%= allowEmptyLyrics ? '' : 'required' %> maxlength="50000" rows="14"><%= hymn.lyrics || '' %></textarea></label>
+    <button class="button" type="submit">Save hymn</button>
+    <a href="/admin">Cancel</a>
+  </form>
+</section>
+<%- include('partials/footer') %>

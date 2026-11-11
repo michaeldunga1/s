@@ -1,0 +1,20 @@
+<%- include('partials/header') %>
+<section>
+  <div class="heading"><div><p class="eyebrow">Explore scripture</p><h1>Search scripture</h1></div></div>
+  <form method="get" action="/search" class="scripture-search">
+    <label for="scripture-search">Search chapter text</label>
+    <div class="search-controls"><input id="scripture-search" type="search" name="q" value="<%= query %>" maxlength="200" required><button class="button" type="submit">Search</button></div>
+  </form>
+  <% if (query) { %>
+    <p role="status"><%= results.length %> matching chapter<%= results.length === 1 ? '' : 's' %>.</p>
+    <div class="list">
+      <% results.forEach(result => { %>
+        <article class="search-result">
+          <h2><a href="/books/<%= encodeURIComponent(result.book_slug) %>/chapters/<%= encodeURIComponent(result.chapter_slug) %>"><%= result.book_name %> <%= result.number %><%= result.title ? ` — ${result.title}` : '' %></a></h2>
+          <p class="search-excerpt"><%= result.excerpt %></p>
+        </article>
+      <% }); %>
+    </div>
+  <% } else { %><p>Enter text to search chapter bodies.</p><% } %>
+</section>
+<%- include('partials/footer') %>

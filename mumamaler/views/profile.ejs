@@ -1,0 +1,9 @@
+<%- include('partials/header') %>
+<div class="heading"><div><p class="eyebrow">Your account</p><h1>Profile</h1></div></div>
+<p><strong>Email:</strong> <%= reader.email %></p>
+<% if (!admin) { %><p><a class="danger" href="/profile/delete">Delete my account</a></p><% } %>
+<section aria-labelledby="profile-bookmarks">
+  <div class="heading"><h2 id="profile-bookmarks">Bookmarks</h2><a href="/bookmarks">View bookmarks</a></div>
+  <%- include('partials/saved-list', { chapters: bookmarks, from: 'profile' }) %>
+</section>
+<%- include('partials/footer') %>

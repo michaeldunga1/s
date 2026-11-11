@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand">
+        <a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a>
+      </div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <% if (user) { %>
+          <% if (user.role === 'admin') { %>
+            <li><a href="/admin">Admin</a></li>
+            <li><a href="/admin/users">Users</a></li>
+          <% } %>
+          <li><a href="/profile">Profile</a></li>
+          <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+          <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+        <% } else { %>
+          <li><a href="/auth/login" class="btn-nav">Login</a></li>
+          <li><a href="/auth/register" class="btn-nav btn-nav-primary">Register</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="dictionary-hero">
+      <div>
+        <p class="hero-eyebrow">Language &amp; community</p>
+        <h1>Luo to English Dictionary</h1>
+        <p>Browse Luo words and their English definitions with community comments.</p>
+      </div>
+      <div class="hero-illustration" aria-hidden="true"><svg class="icon"><use href="/icons.svg#dictionary"></use></svg></div>
+    </div>
+
+    <form method="get" action="/" class="dictionary-search">
+      <label for="dictionary-search">Search Luo words and English definitions</label>
+      <div class="search-controls"><input id="dictionary-search" type="search" name="q" value="<%= query %>" maxlength="200" placeholder="Search dictionary"><button class="btn" type="submit">Search</button><% if (query) { %><a href="/">Clear</a><% } %></div>
+    </form>
+    <% if (words.length === 0) { %>
+      <div class="card">
+        <p style="text-align: center; color: #666;"><%= query ? 'No matching words found.' : 'No words available yet.' %></p>
+      </div>
+    <% } else { %>
+      <% if (query) { %><p role="status"><%= words.length %> matching word<%= words.length === 1 ? '' : 's' %>.</p><% } %>
+      <div class="words-grid">
+        <% words.forEach(word => { %>
+          <a href="/word/<%= word.id %>" class="word-card">
+            <div class="word-card-title"><%= word.word %></div>
+            <div class="word-card-meta">
+              <%= word.definition ? 'View definition' : 'No definition yet' %>
+            </div>
+            <svg class="icon word-arrow" aria-hidden="true"><use href="/icons.svg#arrow"></use></svg>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+
+  <%- include('partials/legal-footer') %>
+</body>
+</html>

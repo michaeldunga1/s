@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Delete User - Luo2English</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<nav class="navbar"><div class="container"><div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div><ul class="navbar-menu"><li><a href="/">Dictionary</a></li><li><a href="/admin">Admin</a></li><li><a href="/admin/users">Users</a></li><li><a href="/profile">Profile</a></li><li><a href="/auth/logout" class="btn-logout">Logout</a></li></ul></div></nav>
+<main class="container">
+  <h1>Delete user</h1>
+  <p>Permanently delete <strong><%= account.username %></strong> (<%= account.email %>), their comments and votes, and votes on those comments. This cannot be undone.</p>
+  <% if (error) { %><p role="alert"><%= error %></p><% } %>
+  <form method="post" action="/admin/users/<%= account.id %>/delete">
+    <input type="hidden" name="_csrf" value="<%= token %>">
+    <label><input type="checkbox" name="confirm" value="delete" required> I understand this deletion is permanent.</label>
+    <button class="btn btn-primary" type="submit">Permanently delete user</button>
+  </form>
+  <p><a href="/admin/users">Cancel</a></p>
+</main>
+<%- include('partials/legal-footer') %>
+</body></html>

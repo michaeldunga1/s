@@ -1,0 +1,16 @@
+<%- include('partials/header') %>
+<p class="breadcrumb"><a href="/">Books</a> / <%= book.name %></p>
+<div class="heading"><div><p class="eyebrow">Book <%= book.book_order %></p><h1><%= book.name %></h1></div></div>
+<p><%- include('partials/book-metadata', { book }) %></p>
+<h2>Chapters</h2>
+<% if (!chapters.length) { %>
+  <p class="empty">No chapters have been added to this book yet.</p>
+<% } else { %>
+  <%- include('partials/search', { label: 'Search chapters', placeholder: 'Chapter number or title' }) %>
+  <div class="chapters" data-search-list>
+    <% chapters.forEach(item => { %>
+      <a href="/books/<%= encodeURIComponent(book.slug) %>/chapters/<%= encodeURIComponent(item.slug) %>" aria-label="Chapter <%= item.number %><%= item.title ? ': ' + item.title : '' %>" data-search-item data-search-text="<%= `${item.number} ${item.title}` %>"><%= item.number %></a>
+    <% }); %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

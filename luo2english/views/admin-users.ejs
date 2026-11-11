@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Users - Luo2English</title><link rel="stylesheet" href="/css/style.css"></head>
+<body>
+<nav class="navbar"><div class="container">
+  <div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div>
+  <ul class="navbar-menu"><li><a href="/">Dictionary</a></li><li><a href="/admin">Admin</a></li><li><a href="/admin/users">Users</a></li><li><a href="/profile">Profile</a></li><li><a href="/auth/logout" class="btn-logout">Logout</a></li></ul>
+</div></nav>
+<main class="container">
+  <div class="admin-header"><h1 class="admin-title">Users</h1><a href="/admin">Back to dashboard</a></div>
+  <p>Administrator accounts cannot be deleted here.</p>
+  <label for="user-search">Search users</label>
+  <input id="user-search" type="search" placeholder="Username, email or role">
+  <p id="user-search-status" role="status" aria-live="polite"></p>
+  <div id="user-list">
+    <% users.forEach(account => { %>
+      <article class="card user-row" data-user-search="<%= `${account.username} ${account.email} ${account.role}` %>">
+        <div><strong><%= account.username %></strong> &middot; <%= account.email %> &middot; <%= account.role === 'admin' ? 'Administrator' : 'User' %></div>
+        <% if (account.role === 'user') { %><a href="/admin/users/<%= account.id %>/delete" aria-label="Delete <%= account.username %>">Delete</a><% } %>
+      </article>
+    <% }); %>
+  </div>
+</main>
+<script src="/js/user-search.js" defer></script>
+<%- include('partials/legal-footer') %>
+</body></html>

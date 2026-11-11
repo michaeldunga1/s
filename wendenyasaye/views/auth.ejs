@@ -1,0 +1,14 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Wende Nyasaye</p>
+  <h1><%= title %></h1>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="<%= action %>" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label>Email<input name="email" type="email" required autocomplete="username" maxlength="254"></label>
+    <label>Password<input name="password" type="password" required autocomplete="<%= action === '/login' ? 'current-password' : 'new-password' %>" minlength="8" maxlength="72"></label>
+    <button class="button" type="submit"><%= title %></button>
+  </form>
+  <% if (action === '/login') { %><p>New here? <a href="/register">Create an account</a>.</p><% } else { %><p>Already registered? <a href="/login">Sign in</a>.</p><% } %>
+</section>
+<%- include('partials/footer') %>

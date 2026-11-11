@@ -1,0 +1,14 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Admin</p><h1>Delete user</h1>
+  <p>Permanently delete <strong><%= account.email || account.username %></strong> and their saved favorites and bookmarks. This cannot be undone.</p>
+  <% if (error) { %><p class="error" role="alert"><%= error %></p><% } %>
+  <form method="post" action="/admin/users/<%= account.id %>/delete" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <input type="hidden" name="accountToken" value="<%= accountToken %>">
+    <label><input type="checkbox" name="confirm" value="delete" required> I understand this deletion is permanent.</label>
+    <button class="button" type="submit">Permanently delete user</button>
+  </form>
+  <p><a href="/admin/users">Cancel</a></p>
+</section>
+<%- include('partials/footer') %>

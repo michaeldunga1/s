@@ -1,0 +1,23 @@
+<%- include('partials/header') %>
+<section>
+  <div class="section-heading"><div><p class="eyebrow">Explore the songbook</p><h1><%= title %></h1></div><span class="count"><%= items.length %> listed</span></div>
+  <form method="get" action="/<%= title.toLowerCase() %>" class="toolbar">
+    <label class="search">Search <%= title.toLowerCase() %>
+      <input name="q" type="search" value="<%= query %>" maxlength="200" placeholder="Search <%= title.toLowerCase() %>" autocomplete="off">
+    </label>
+    <button class="button" type="submit">Search</button>
+    <% if (query) { %><a href="/<%= title.toLowerCase() %>">Clear search</a><% } %>
+  </form>
+  <div class="hymn-list">
+    <% items.forEach(item => { %>
+      <article class="hymn">
+        <div class="hymn-details">
+          <h3><a href="<%= kind === 'composer' ? `/composers?name=${encodeURIComponent(item.name)}` : `/?category=${item.id}` %>"><%= item.name %></a></h3>
+          <p><%= item.count %> hymn<%= item.count === 1 ? '' : 's' %></p>
+        </div>
+      </article>
+    <% }); %>
+    <% if (!items.length) { %><p class="empty" role="status"><%= query ? `No ${title.toLowerCase()} found.` : `No ${title.toLowerCase()} yet.` %></p><% } %>
+  </div>
+</section>
+<%- include('partials/footer') %>

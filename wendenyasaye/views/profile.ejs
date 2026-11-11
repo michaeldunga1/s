@@ -1,0 +1,33 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Your account</p>
+  <h1>Profile</h1>
+  <p><strong>Email:</strong> <%= user.email %></p>
+  <p><strong>Account type:</strong> <%= user.role === 'admin' ? 'Administrator' : 'User' %></p>
+  <p><a href="/profile/edit">Edit profile</a><% if (user.role === 'user') { %> · <a class="danger" href="/profile/delete">Delete account</a><% } %></p>
+  <h2>Bookmarks</h2>
+  <% if (!bookmarks.length) { %>
+    <p class="empty">No bookmarks yet. Open a hymn to save it.</p>
+  <% } else { %>
+    <div class="hymn-list">
+      <% bookmarks.forEach(hymn => { %>
+        <div class="hymn">
+          <div class="hymn-details">
+            <a href="/hymns/<%= encodeURIComponent(hymn.slug) %>"><%= hymn.number ? `${hymn.number}. ` : '' %><%= hymn.title %></a>
+            <% if (hymn.note) { %><p><strong>Note:</strong> <span class="bookmark-note"><%= hymn.note %></span></p><% } %>
+            <% if (hymn.tags) { %><p><strong>Tags:</strong> <%= hymn.tags %></p><% } %>
+            <a href="/bookmarks/<%= hymn.id %>/edit" aria-label="Edit bookmark for <%= hymn.title %>">Edit bookmark</a>
+          </div>
+          <form method="post" action="/bookmarks/<%= hymn.id %>">
+            <input type="hidden" name="_csrf" value="<%= csrf %>">
+            <input type="hidden" name="action" value="remove">
+            <input type="hidden" name="from" value="profile">
+            <button type="submit" class="danger" aria-label="Remove <%= hymn.title %> from bookmarks">Remove</button>
+          </form>
+        </div>
+      <% }); %>
+    </div>
+  <% } %>
+  <p><a href="/">Back to hymns</a></p>
+</section>
+<%- include('partials/footer') %>

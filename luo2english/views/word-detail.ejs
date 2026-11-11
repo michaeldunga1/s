@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand">
+        <a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a>
+      </div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <% if (user) { %>
+          <% if (user.role === 'admin') { %>
+            <li><a href="/admin">Admin</a></li>
+            <li><a href="/admin/users">Users</a></li>
+          <% } %>
+          <li><a href="/profile">Profile</a></li>
+          <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+          <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+        <% } else { %>
+          <li><a href="/auth/login" class="btn-nav">Login</a></li>
+          <li><a href="/auth/register" class="btn-nav btn-nav-primary">Register</a></li>
+        <% } %>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <a href="/" style="color: #D4A574; margin-bottom: 1rem; display: inline-block;">← Back to Dictionary</a>
+
+    <div class="card" style="margin-bottom: 2rem;">
+      <h1 style="font-size: 2rem; color: #8B6239; margin-bottom: 0.5rem;"><%= word.word %></h1>
+    </div>
+
+      <div class="definition-item">
+        <div class="definition-text" style="white-space: pre-wrap;"><%= word.definition || 'No definition yet.' %></div>
+
+        <div class="comments-section">
+          <h3 style="color: #8B6239; margin-bottom: 1rem;">
+            <svg class="icon" aria-hidden="true"><use href="/icons.svg#conversation"></use></svg> Comments (<%= comments.length %>)
+          </h3>
+
+          <% if (comments.length === 0) { %>
+            <p style="color: #999;">No comments yet. Be the first to comment!</p>
+          <% } else { %>
+            <% comments.forEach(comment => { %>
+              <div class="comment">
+                <div class="comment-header">
+                  <span class="comment-author"><%= comment.username %></span>
+                  <span class="comment-date"><%= new Date(comment.created_at).toLocaleDateString() %></span>
+                </div>
+
+                <div id="comment-view-<%= comment.id %>" class="comment-body">
+                  <%= comment.body %>
+                </div>
+
+                <div id="comment-edit-<%= comment.id %>" style="display: none;">
+                  <textarea id="edit-body-<%= comment.id %>" style="margin-bottom: 0.5rem;"><%= comment.body %></textarea>
+                  <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-small" onclick="editComment(<%= comment.id %>, document.getElementById('edit-body-<%= comment.id %>'))">Save</button>
+                    <button class="btn btn-secondary btn-small" onclick="toggleEditMode(<%= comment.id %>)">Cancel</button>
+                  </div>
+                </div>
+
+                <div class="comment-actions">
+                  <% if (user && user.id === comment.user_id) { %>
+                    <button class="btn-link" onclick="toggleEditMode(<%= comment.id %>)">Edit</button>
+                    <button class="btn-link" style="color: #C9453A;" onclick="deleteComment(<%= comment.id %>)">Delete</button>
+                  <% } %>
+                  <% if (user && user.role === 'admin' && user.id !== comment.user_id) { %>
+                    <button class="btn-link" style="color: #C9453A;" onclick="deleteComment(<%= comment.id %>)">Delete (Admin)</button>
+                  <% } %>
+                </div>
+
+                <div class="vote-section">
+                  <% if (user && user.role !== 'admin' && user.id !== comment.user_id) { %>
+                    <button 
+                      class="vote-btn <%= comment.userVote === 1 ? 'active' : '' %>"
+                      onclick="vote(<%= comment.id %>, 1, this)"
+                      title="Upvote"
+                    >👍</button>
+                    <button 
+                      class="vote-btn <%= comment.userVote === -1 ? 'active' : '' %>"
+                      onclick="vote(<%= comment.id %>, -1, this)"
+                      title="Downvote"
+                    >👎</button>
+                  <% } else if (!user || user.role === 'admin') { %>
+                    <span style="color: #999; font-size: 0.9rem;">
+                      <% if (!user) { %>
+                        Login to vote
+                      <% } else { %>
+                        Admins cannot vote
+                      <% } %>
+                    </span>
+                  <% } %>
+                  <span class="vote-score"><%= comment.score %></span>
+                </div>
+              </div>
+            <% }); %>
+          <% } %>
+
+          <% if (user && user.role !== 'admin') { %>
+            <div style="margin-top: 1.5rem; padding: 1rem; background-color: #FEFDF8; border-radius: 4px;">
+              <h4 style="color: #8B6239; margin-bottom: 0.5rem;">Post a Comment</h4>
+              <textarea 
+                id="comment-body-<%= word.id %>"
+                placeholder="Share your thoughts (max 500 characters)"
+                maxlength="500"
+                style="margin-bottom: 0.5rem;"
+              ></textarea>
+              <button 
+                class="btn btn-primary btn-small"
+                onclick="postComment(<%= word.id %>, document.getElementById('comment-body-<%= word.id %>'))"
+              >Post Comment</button>
+            </div>
+          <% } else if (!user) { %>
+            <div style="margin-top: 1.5rem; padding: 1rem; background-color: #fff3cd; border-radius: 4px; text-align: center;">
+              <a href="/auth/login" class="btn btn-primary">Login to Comment</a>
+            </div>
+          <% } %>
+        </div>
+      </div>
+  </div>
+
+  <%- include('partials/legal-footer') %>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

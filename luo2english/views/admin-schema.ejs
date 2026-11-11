@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <li><a href="/admin">Admin</a></li>
+        <li><a href="/admin/users">Users</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+        <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main class="container">
+    <div class="admin-header">
+      <h1 class="admin-title">Database Schema</h1>
+      <a href="/admin" class="btn-link">Back to dashboard</a>
+    </div>
+    <p>Read-only PostgreSQL tables, indexes, constraints, triggers and functions in the application schema.</p>
+    <% if (objects.length === 0) { %>
+      <p>No schema objects found.</p>
+    <% } %>
+    <% objects.forEach(object => { %>
+      <section class="card">
+        <h2 class="card-header"><%= object.name %></h2>
+        <p>Type: <%= object.type %> &middot; Table: <%= object.tbl_name %></p>
+        <% if (object.sql) { %>
+          <pre style="overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere;"><code><%= object.sql %></code></pre>
+        <% } else { %>
+          <p>No definition is available.</p>
+        <% } %>
+      </section>
+    <% }); %>
+  </main>
+
+  <%- include('partials/legal-footer') %>
+</body>
+</html>

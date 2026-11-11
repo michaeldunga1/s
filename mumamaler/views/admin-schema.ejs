@@ -1,0 +1,21 @@
+<%- include('partials/header') %>
+<div class="heading">
+  <div><p class="eyebrow">Admin panel</p><h1>Database Schema</h1></div>
+  <a href="/admin">Back to dashboard</a>
+</div>
+<p>Read-only PostgreSQL tables, indexes, constraints and triggers in the application schema.</p>
+<% if (!objects.length) { %><p class="empty">No schema objects found.</p><% } %>
+<div class="list">
+  <% objects.forEach(object => { %>
+    <section class="schema-object">
+      <h2><%= object.name %></h2>
+      <p>Type: <%= object.type %> &middot; Table: <%= object.tbl_name %></p>
+      <% if (object.sql) { %>
+        <pre><code><%= object.sql %></code></pre>
+      <% } else { %>
+        <p>No definition is available.</p>
+      <% } %>
+    </section>
+  <% }); %>
+</div>
+<%- include('partials/footer') %>

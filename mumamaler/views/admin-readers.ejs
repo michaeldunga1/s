@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<div class="heading"><div><p class="eyebrow">Admin panel</p><h1>Users</h1></div><a href="/admin">Back to admin</a></div>
+<p class="muted">Reader accounts can be deleted. Administrator accounts are listed but cannot be deleted here.</p>
+<% if (!users.length) { %>
+  <p class="empty">No user accounts yet.</p>
+<% } else { %>
+  <%- include('partials/search', { label: 'Search users', placeholder: 'Email or role' }) %>
+  <div class="list" data-search-list>
+    <% users.forEach(account => { %>
+      <div class="admin-row" data-search-item data-search-text="<%= `${account.email} ${account.role}` %>">
+        <div class="row-title"><%= account.email %><small><%= account.role === 'admin' ? 'Administrator' : 'Reader' %></small></div>
+        <% if (account.role === 'reader') { %><a class="danger" href="/admin/readers/<%= account.id %>/delete" aria-label="Delete <%= account.email %>">Delete</a><% } %>
+      </div>
+    <% }); %>
+  </div>
+<% } %>
+<%- include('partials/footer') %>

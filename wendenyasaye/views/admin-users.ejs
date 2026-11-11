@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+<div class="section-heading"><div><p class="eyebrow">Admin</p><h1>Users</h1></div><a href="/admin">Back to admin</a></div>
+<p class="hint">Administrator accounts cannot be deleted here.</p>
+<% if (!users.length) { %>
+  <p class="empty">No user accounts yet.</p>
+<% } else { %>
+  <div class="toolbar"><label class="search" for="user-search">Search users<input type="search" id="user-search" placeholder="Email, username or role"></label></div>
+  <p id="user-search-status" role="status" aria-live="polite"></p>
+  <div class="hymn-list">
+    <% users.forEach(account => { %>
+      <article class="hymn" data-user-search="<%= `${account.username} ${account.email || ''} ${account.role}` %>">
+        <div class="hymn-details"><strong><%= account.email || account.username %></strong><p><%= account.role === 'admin' ? 'Administrator' : 'User' %><%= account.email ? '' : ' · No email assigned' %></p></div>
+        <% if (account.role === 'user') { %><a class="danger" href="/admin/users/<%= account.id %>/delete" aria-label="Delete <%= account.email || account.username %>">Delete</a><% } %>
+      </article>
+    <% }); %>
+  </div>
+  <script src="/user-search.js" defer></script>
+<% } %>
+<%- include('partials/footer') %>

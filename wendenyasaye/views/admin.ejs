@@ -1,0 +1,22 @@
+<%- include('partials/header') %>
+<div class="section-heading">
+  <div><p class="eyebrow">Admin</p><h1>Manage hymns</h1></div>
+  <a class="button" href="/admin/hymns/new">Add hymn</a>
+</div>
+<p>Add hymn lyrics and authors. Add hymn numbers only when known.</p>
+<p><a href="/admin/users">Manage users</a> · <a href="/admin/categories">Manage categories</a></p>
+<div class="hymn-list">
+  <% hymns.forEach(hymn => { %>
+    <article class="hymn">
+      <div class="hymn-number"><%= hymn.number || '♪' %></div>
+      <div class="hymn-details"><h3><%= hymn.title %></h3><%- include('partials/hymn-metadata', { hymn, composerNames }) %><a href="/hymns/<%= encodeURIComponent(hymn.slug) %>">View hymn &rarr;</a></div>
+      <a href="/admin/hymns/<%= hymn.id %>/edit">Edit</a>
+      <form method="post" action="/admin/hymns/<%= hymn.id %>/delete" onsubmit="return confirm('Delete this hymn and remove it from favorites and bookmarks?')">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <button class="danger" type="submit">Delete</button>
+      </form>
+    </article>
+  <% }); %>
+  <% if (!hymns.length) { %><p class="empty">No hymns yet. Add one to get started.</p><% } %>
+</div>
+<%- include('partials/footer') %>

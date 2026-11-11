@@ -1,0 +1,30 @@
+<%- include('partials/header') %>
+<article class="form-card">
+  <h1><%= title %></h1>
+  <p><strong>Draft:</strong> This notice requires legal and deployment review before publication.</p>
+  <% if (page === 'privacy') { %>
+    <h2>Operator and contact</h2>
+    <p>Michael Dunga operates Muma Maler on a swiftener.com subdomain. For privacy requests, contact <a href="mailto:michaeldunga1@gmail.com">michaeldunga1@gmail.com</a> or <a href="tel:+254717953381">+254 717 953 381</a>.</p>
+    <h2>Information and use</h2>
+    <p>Accounts contain an email address and password hash. Chapter bookmarks, notes and tags are stored to provide your reading features. Notes and tags are private to the account, but administrators and those with database access may have access. The session cookie maintains sign-in and form protection. The server and hosting infrastructure may process technical information such as IP addresses and request logs for operation and security.</p>
+    <h2>Hosting and access</h2>
+    <p>The planned host is Contabo, on a VPS in the European Union. Information may be processed outside Kenya. Administrators and hosting or infrastructure providers may process information as needed to operate the service.</p>
+    <h2>Retention and your choices</h2>
+    <p>Account information and bookmarks remain until removed; operational logs and backups may be retained separately. Readers can delete their own accounts and bookmarks from Profile, and administrators can delete reader accounts. Contact the operator to request access, correction or deletion, or to raise other privacy concerns. Backup and log retention periods must be confirmed before deployment.</p>
+    <p>Applicable Kenyan data protection law may give you additional rights and allow complaints to the Office of the Data Protection Commissioner. Requests and cross-border safeguards will be handled in accordance with applicable law.</p>
+  <% } else if (page === 'terms') { %>
+    <h2>Using the reader</h2>
+    <p>Muma Maler provides a Bible reading interface and private bookmarks. Use it lawfully, protect your account credentials, and do not disrupt the service or access another person's account without permission.</p>
+    <h2>Content and availability</h2>
+    <p>Scripture is entered by administrators and may contain errors. Bible translations and other third-party material remain subject to their applicable rights; no permission to reuse them is implied. Administrators should only add material they have permission to reproduce. The service may change or become unavailable. Nothing here excludes rights that cannot lawfully be excluded.</p>
+    <h2>Contact</h2>
+    <p>Contact Michael Dunga at <a href="mailto:michaeldunga1@gmail.com">michaeldunga1@gmail.com</a> or <a href="tel:+254717953381">+254 717 953 381</a> with questions or content concerns.</p>
+  <% } else { %>
+    <h2>Session cookie</h2>
+    <p>Muma Maler uses the <code>mumamaler.sid</code> session cookie to maintain sign-in and protect forms. It is a session cookie; signing out ends the server session. Blocking cookies may prevent account features from working.</p>
+    <h2>Browser and server storage</h2>
+    <p>Accounts and bookmarks are stored on the server. You can remove cookies using your browser settings. This notice covers the application as currently implemented; infrastructure or new features may introduce additional storage and require an updated notice.</p>
+    <p>See the <a href="/privacy">privacy policy</a> for contact and data details.</p>
+  <% } %>
+</article>
+<%- include('partials/footer') %>

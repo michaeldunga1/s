@@ -1,0 +1,19 @@
+<%- include('partials/header') %>
+<p class="breadcrumb"><a href="/admin">Admin</a> / <%= book.name %></p>
+<div class="heading">
+  <div><p class="eyebrow">Manage chapters</p><h1><%= book.name %></h1></div>
+  <a class="button" href="/admin/books/<%= book.id %>/chapters/new">Add chapter</a>
+</div>
+<% if (!chapters.length) { %><p class="empty">No chapters have been added yet.</p><% } %>
+<% if (chapters.length) { %><%- include('partials/search', { label: 'Search chapters', placeholder: 'Chapter number or title' }) %><% } %>
+<div class="list" data-search-list>
+  <% chapters.forEach(chapter => { %>
+    <div class="admin-row" data-search-item data-search-text="<%= `${chapter.number} ${chapter.title}` %>">
+      <div class="row-title"><strong>Chapter <%= chapter.number %><%= chapter.title ? `: ${chapter.title}` : ' (title not set)' %></strong></div>
+      <a href="/books/<%= encodeURIComponent(book.slug) %>/chapters/<%= encodeURIComponent(chapter.slug) %>">View</a>
+      <a href="/admin/books/<%= book.id %>/chapters/<%= chapter.id %>/edit">Edit</a>
+      <form method="post" action="/admin/books/<%= book.id %>/chapters/<%= chapter.id %>/delete" onsubmit="return confirm('Delete this chapter?')"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="danger">Delete</button></form>
+    </div>
+  <% }); %>
+</div>
+<%- include('partials/footer') %>

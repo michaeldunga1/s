@@ -1,0 +1,17 @@
+<%- include('partials/header') %>
+<section>
+  <div class="section-heading"><div><p class="eyebrow"><%= heading %></p><h1><%= title %></h1></div><span class="count"><%= hymns.length %> hymn<%= hymns.length === 1 ? '' : 's' %></span></div>
+  <div class="hymn-list">
+    <% hymns.forEach(hymn => { %>
+      <article class="hymn">
+        <div class="hymn-number"><%= hymn.number || '♪' %></div>
+        <div class="hymn-details">
+          <h3><a href="/hymns/<%= encodeURIComponent(hymn.slug) %>"><%= hymn.title %></a></h3>
+          <%- include('partials/hymn-metadata', { hymn, composerNames }) %>
+        </div>
+      </article>
+    <% }); %>
+    <% if (!hymns.length) { %><p class="empty">No hymns found.</p><% } %>
+  </div>
+</section>
+<%- include('partials/footer') %>

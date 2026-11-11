@@ -1,0 +1,55 @@
+luo2english/
+│
+├── app.js                          # Main Express application
+│
+├── package.json                    # Dependencies and scripts
+├── package-lock.json               # Dependency lock file
+│
+├── .env.example                    # Environment configuration template
+│
+├── db/
+│   └── init.js                     # Database initialization & schema
+│
+├── middleware/
+│   └── auth.js                     # Authentication and authorization middleware
+│
+├── routes/
+│   ├── public.js                   # Public routes (home, word detail)
+│   ├── auth.js                     # Auth routes (register, login, logout)
+│   ├── admin.js                    # Admin CRUD routes (words, definitions)
+│   └── comments.js                 # Comment and voting JSON API
+│
+├── views/
+│   ├── index.ejs                   # Home page - word list
+│   ├── word-detail.ejs             # Word detail - definitions, comments, voting
+│   ├── login.ejs                   # Login form
+│   ├── register.ejs                # Registration form
+│   ├── error.ejs                   # Error page
+│   ├── admin-dashboard.ejs         # Admin dashboard
+│   ├── admin-words.ejs             # Word management
+│   ├── admin-word-form.ejs         # Add/edit word form
+│   ├── admin-definitions.ejs       # Definition management
+│   ├── admin-definition-form.ejs   # Add/edit definition form
+│   └── layout.ejs                  # Base layout (optional template inheritance)
+│
+├── public/
+│   ├── css/
+│   │   └── style.css               # African-inspired styling
+│   └── js/
+│       └── app.js                  # Client-side comment & voting handlers
+│
+├── scripts/
+│   └── create-admin.js             # Admin user creation script
+│
+├── node_modules/                   # Dependencies (npm install)
+│
+└── Documentation:
+    ├── README.md                   # Setup guide & API reference
+    ├── IMPLEMENTATION_PLAN.md      # Detailed implementation checklist
+    ├── TESTING.md                  # Manual test cases
+    ├── PLAN_SUMMARY.md             # This plan overview
+    └── FILE_STRUCTURE.txt          # This file
+
+Database: luo.db (auto-created in project root on app start)
+
+Total: 30 files (excluding node_modules)

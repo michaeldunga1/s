@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+  <symbol id="book" viewBox="0 0 24 24">
+    <path d="M12 6.5C9.5 4.5 5.5 4.5 3 6v13c2.5-1.5 6.5-1.5 9 .5m0-13C14.5 4.5 18.5 4.5 21 6v13c-2.5-1.5-6.5-1.5-9 .5m0-13v13" />
+  </symbol>
+  <symbol id="bookmark" viewBox="0 0 24 24">
+    <path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4z" />
+  </symbol>
+  <symbol id="search" viewBox="0 0 24 24">
+    <circle cx="10.5" cy="10.5" r="6.5" /><path d="m15.5 15.5 4.5 4.5" />
+  </symbol>
+  <symbol id="arrow-right" viewBox="0 0 24 24">
+    <path d="M4 12h16m-6-6 6 6-6 6" />
+  </symbol>
+  <symbol id="edit" viewBox="0 0 24 24">
+    <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20zm9.5-12.5 3 3" />
+  </symbol>
+</svg>

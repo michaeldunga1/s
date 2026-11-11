@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#264d43">
+  <title>Offline | Wende Nyasaye</title>
+  <link rel="stylesheet" href="/style.css">
+  <script src="/offline.js" defer></script>
+</head>
+<body>
+  <header class="site-header"><div class="wrap header-inner"><a class="brand" href="/">Wende Nyasaye <span>Dholuo hymn directory</span></a><span>Offline</span></div></header>
+  <main class="wrap">
+    <section class="hero"><p class="eyebrow">Saved on this device</p><h1>Offline directory</h1><p>Browse your last saved hymns and favorites. Making changes requires an internet connection.</p></section>
+    <section>
+      <div class="section-heading"><h2>Hymns</h2></div>
+      <div class="toolbar">
+        <label class="search">Search hymns, lyrics, authors or categories<input id="search" type="search" placeholder="Search hymns" maxlength="200"></label>
+        <label>Category<select id="category"><option value="">All categories</option></select></label>
+        <label class="filter"><input type="checkbox" id="favorites-only"> Favorites only</label>
+      </div>
+      <p id="status" role="status">Loading saved hymns...</p>
+      <p id="credit-filter" hidden></p>
+      <div id="hymn-list" class="hymn-list"></div>
+    </section>
+  </main>
+  <footer class="wrap footer">Reconnect to manage hymns or change favorites.</footer>
+</body>
+</html>

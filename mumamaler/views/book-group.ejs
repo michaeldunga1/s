@@ -1,0 +1,13 @@
+<%- include('partials/header') %>
+<p class="breadcrumb"><a href="/">Books</a> / <%= title %></p>
+<div class="heading">
+  <div><p class="eyebrow"><%= heading %></p><h1><%= title %></h1></div>
+  <span class="muted"><%= books.length %> book<%= books.length === 1 ? '' : 's' %></span>
+</div>
+<% if (description) { %><p><%= description %></p><% } %>
+<% if (books.length) { %>
+  <%- include('partials/book-list', { books }) %>
+<% } else { %>
+  <p class="empty">No books found.</p>
+<% } %>
+<%- include('partials/footer') %>

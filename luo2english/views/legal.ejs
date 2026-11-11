@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title><%= title %> - Luo2English</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar"><div class="container"><div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div></div></nav>
+  <main class="container">
+    <article class="card">
+      <h1><%= title %></h1>
+      <p><strong>Draft:</strong> This notice requires legal and deployment review before publication.</p>
+      <% if (page === 'privacy') { %>
+        <h2>Operator and contact</h2>
+        <p>Michael Dunga operates Luo2English on a swiftener.com subdomain. For privacy requests, contact <a href="mailto:michaeldunga1@gmail.com">michaeldunga1@gmail.com</a> or <a href="tel:+254717953381">+254 717 953 381</a>.</p>
+        <h2>Information and use</h2>
+        <p>Accounts contain a username, email address and password hash. Comments, votes and their timestamps are stored to provide the dictionary and community features. Comments and usernames are visible to visitors; do not post private information. The session cookie helps maintain sign-in. The server and hosting infrastructure may process technical information such as IP addresses and request logs for operation and security.</p>
+        <h2>Hosting and access</h2>
+        <p>The planned host is Contabo, on a VPS in the European Union. Information may be processed outside Kenya. Administrators can access account information and manage content; hosting and infrastructure providers may process information as needed to provide their services. External sites have their own policies.</p>
+        <h2>Retention and your choices</h2>
+        <p>Account information and contributions remain until removed; operational logs and backups may be retained separately. Contact the operator to request access, correction or deletion, or to raise other privacy concerns. Users can edit or delete their own comments. An administrator can delete a regular account and its comments and votes. Backup and log retention periods must be confirmed before deployment.</p>
+        <p>Applicable Kenyan data protection law may give you additional rights and allow complaints to the Office of the Data Protection Commissioner. Requests and cross-border safeguards will be handled in accordance with applicable law.</p>
+      <% } else if (page === 'terms') { %>
+        <h2>Using the dictionary</h2>
+        <p>Luo2English provides dictionary entries and community comments. Use it lawfully, protect your account credentials, and do not disrupt the service or access another person's account without permission.</p>
+        <h2>Contributions</h2>
+        <p>Only post material you have the right to share. Comments and usernames are public. Do not post unlawful, abusive or infringing content, or another person's private information. Administrators can remove comments and regular user accounts.</p>
+        <h2>Content and availability</h2>
+        <p>Translations and community contributions may contain errors. The service may change or become unavailable. Third-party material remains subject to its applicable rights; no permission to reuse it is implied. Nothing here excludes rights that cannot lawfully be excluded.</p>
+        <h2>Contact</h2>
+        <p>Contact Michael Dunga at <a href="mailto:michaeldunga1@gmail.com">michaeldunga1@gmail.com</a> or <a href="tel:+254717953381">+254 717 953 381</a> with questions or content concerns.</p>
+      <% } else { %>
+        <h2>Session cookie</h2>
+        <p>Luo2English uses the <code>connect.sid</code> session cookie for account sign-in. It is configured with a maximum age of seven days; signing out ends the server session. Blocking cookies may prevent account features from working.</p>
+        <h2>Browser and server storage</h2>
+        <p>Dictionary data and account contributions are stored on the server. You can remove cookies using your browser settings. This notice covers the application as currently implemented; infrastructure or new features may introduce additional storage and require an updated notice.</p>
+        <p>See the <a href="/privacy">privacy policy</a> for contact and data details.</p>
+      <% } %>
+    </article>
+  </main>
+  <%- include('partials/legal-footer') %>
+</body>
+</html>

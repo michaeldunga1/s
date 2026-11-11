@@ -1,0 +1,46 @@
+<%- include('partials/header') %>
+<article class="form-card hymn-page">
+  <p class="eyebrow"><%= hymn.number ? `Hymn ${hymn.number}` : 'Hymn' %></p>
+  <h1><%= hymn.title %></h1>
+  <%- include('partials/hymn-metadata', { hymn: { ...hymn, categories }, composerNames }) %>
+  <div class="hymn-actions">
+    <% if (user) { %>
+      <form method="post" action="/bookmarks/<%= hymn.id %>">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <input type="hidden" name="action" value="<%= bookmark ? 'remove' : 'add' %>">
+        <button class="button" type="submit"><svg class="icon" aria-hidden="true"><use href="/icons.svg#bookmark"></use></svg> <%= bookmark ? 'Remove bookmark' : 'Bookmark' %></button>
+      </form>
+      <% if (bookmark) { %><a href="/bookmarks/<%= hymn.id %>/edit"><svg class="icon" aria-hidden="true"><use href="/icons.svg#edit"></use></svg> Edit bookmark</a><% } %>
+    <% } else { %>
+      <a href="/login">Sign in to bookmark</a>
+    <% } %>
+    <% if (user && user.role === 'admin') { %>
+      <a class="button button-secondary" href="/admin/hymns/<%= hymn.id %>/edit">Edit</a>
+      <a class="danger" href="/admin/hymns/<%= hymn.id %>/delete">Delete</a>
+    <% } %>
+  </div>
+  <% if (bookmark && (bookmark.note || bookmark.tags)) { %>
+    <div class="bookmark-metadata">
+      <% if (bookmark.note) { %><p><strong>Note:</strong> <span class="bookmark-note"><%= bookmark.note %></span></p><% } %>
+      <% if (bookmark.tags) { %><p><strong>Tags:</strong> <%= bookmark.tags %></p><% } %>
+    </div>
+  <% } %>
+  <details class="share-hymn">
+    <summary><svg class="icon" aria-hidden="true"><use href="/icons.svg#share"></use></svg> Share hymn</summary>
+    <p>Copy this page link to share it.</p>
+    <a id="share-link" href="/hymns/<%= encodeURIComponent(hymn.slug) %>">Hymn link</a>
+    <button id="share-button" class="button button-secondary" type="button" hidden>Share</button>
+    <p id="share-status" role="status" aria-live="polite"></p>
+  </details>
+  <script src="/share.js" defer></script>
+  <% if (hymn.lyrics) { %>
+    <div class="lyrics"><%= hymn.lyrics %></div>
+  <% } else { %>
+    <p>Lyrics have not been added yet.</p>
+    <% if (hymn.legacy_url && hymn.legacy_url.startsWith('https://www.mysongbooks.scaptedesigns.com/library/wende-nyasaye/')) { %>
+      <a href="<%= hymn.legacy_url %>" target="_blank" rel="noopener noreferrer">Open the previously saved reference &nearr;</a>
+    <% } %>
+  <% } %>
+  <p><a href="/">Back to hymns</a></p>
+</article>
+<%- include('partials/footer') %>

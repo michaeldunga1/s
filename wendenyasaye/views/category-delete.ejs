@@ -1,0 +1,12 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Admin</p><h1>Delete category</h1>
+  <p>Delete <strong><%= category.name %></strong> and remove it from its hymns? The hymns themselves will not be deleted.</p>
+  <form method="post" action="/admin/categories/<%= category.id %>/delete" class="stack">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <label><input type="checkbox" name="confirm" value="delete" required> I understand this category will be removed.</label>
+    <button class="button" type="submit">Delete category</button>
+  </form>
+  <p><a href="/admin/categories">Cancel</a></p>
+</section>
+<%- include('partials/footer') %>

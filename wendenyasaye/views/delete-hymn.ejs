@@ -1,0 +1,11 @@
+<%- include('partials/header') %>
+<section class="form-card">
+  <p class="eyebrow">Admin</p><h1>Delete hymn</h1>
+  <p>Delete <strong><%= hymn.title %></strong> and remove it from all favorites and bookmarks? This cannot be undone.</p>
+  <form method="post" action="/admin/hymns/<%= hymn.id %>/delete">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <button class="button" type="submit">Permanently delete hymn</button>
+  </form>
+  <p><a href="/hymns/<%= encodeURIComponent(hymn.slug) %>">Cancel</a></p>
+</section>
+<%- include('partials/footer') %>

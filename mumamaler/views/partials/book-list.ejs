@@ -1,0 +1,14 @@
+<%- include('search', { label: 'Search books', placeholder: 'Book name, author, category or index' }) %>
+<div class="grid" data-search-list>
+  <% books.forEach(book => { %>
+    <article class="book-card" data-search-item data-search-text="<%= [book.name, book.book_order, book.author, book.category, book.testament === 'old' ? 'Old Testament' : book.testament === 'new' ? 'New Testament' : ''].filter(value => value != null).join(' ') %>">
+      <span class="book-number"><%= book.book_order %></span>
+      <div class="book-card-content">
+        <strong><a href="/books/<%= encodeURIComponent(book.slug) %>"><%= book.name %></a></strong>
+        <small><%- include('book-metadata', { book }) %></small>
+        <small><%= book.chapter_count %> chapter<%= book.chapter_count === 1 ? '' : 's' %></small>
+      </div>
+      <a class="card-arrow" href="/books/<%= encodeURIComponent(book.slug) %>" aria-label="View <%= book.name %>"><svg class="icon" aria-hidden="true"><use href="/icons.svg#arrow-right"></use></svg></a>
+    </article>
+  <% }); %>
+</div>
