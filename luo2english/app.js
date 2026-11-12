@@ -4,6 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const db = require('./db/postgres');
+const { sendPasswordResetEmail } = require('./lib/mailer');
 const { attachUser, validateSession } = require('./middleware/auth');
 
 const app = express();
@@ -74,3 +75,4 @@ if (require.main === module) {
 module.exports = app;
 app.locals.db = db;
 app.locals.sessionStore = sessionStore;
+app.locals.sendPasswordResetEmail = sendPasswordResetEmail;

@@ -95,6 +95,15 @@ install a certificate and enable HTTP-to-HTTPS redirects before public use.
    ```
    The app will listen on `http://localhost:3000`
 
+### Password reset email
+
+Password reset links are delivered over SMTP. Set `SMTP_HOST`, `SMTP_PORT`,
+`SMTP_USER`, `SMTP_PASS`, and `MAIL_FROM` in the environment, plus `APP_URL` for
+the public site origin used in reset links. Without `SMTP_HOST`, reset links are
+logged to the console in development and sending fails in production.
+Reset tokens expire after 1 hour, are single use, and only their SHA-256 hashes
+are stored.
+
 ## Database Schema
 
 ### users
@@ -106,6 +115,18 @@ install a certificate and enable HTTP-to-HTTPS redirects before public use.
 | password_hash| TEXT    | NOT NULL   |
 | role         | TEXT    | 'admin' \| 'user', DEFAULT 'user' |
 | created_at   | DATETIME| DEFAULT CURRENT_TIMESTAMP |
+
+### password_reset_tokens
+| Column     | Type    | Constraint |
+|------------|---------|------------|
+| id         | INTEGER | PK, AI     |
+| user_id    | INTEGER | FK (users.id), ON DELETE CASCADE |
+| token_hash | TEXT    | UNIQUE, NOT NULL (SHA-256 of the emailed token) |
+| expires_at | DATETIME| NOT NULL (1 hour after issue) |
+| created_at | DATETIME| DEFAULT CURRENT_TIMESTAMP |
+
+The table is created automatically on first use. Only the token hash is stored;
+the raw token exists only in the emailed reset link.
 
 ### words
 | Column     | Type    | Constraint |
@@ -150,6 +171,10 @@ All foreign keys have corresponding indexes for performance.
 - `POST /auth/register` - Create account
 - `GET /auth/login` - Login form
 - `POST /auth/login` - Authenticate user
+- `GET /auth/forgot-password` - Request a password reset link
+- `POST /auth/forgot-password` - Email a reset link (generic response either way)
+- `GET /auth/reset-password?token=...` - Choose a new password
+- `POST /auth/reset-password` - Consume the token and set the new password
 - `GET /auth/logout` - Logout
 
 ### Admin

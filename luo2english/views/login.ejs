@@ -35,6 +35,10 @@
       <div class="card">
         <div class="card-header">Login</div>
 
+        <% if (locals.success) { %>
+          <div class="alert alert-success"><%= success %></div>
+        <% } %>
+
         <% if (errors && errors.length > 0) { %>
           <% errors.forEach(error => { %>
             <div class="alert alert-error"><%= error %></div>
@@ -65,6 +69,10 @@
 
           <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
         </form>
+
+        <p style="margin-top: 0.75rem; text-align: center; color: #666;">
+          <a href="/auth/forgot-password" style="color: #D4A574;">Forgot your password?</a>
+        </p>
 
         <p style="margin-top: 1rem; text-align: center; color: #666;">
           Don't have an account? <a href="/auth/register" style="color: #D4A574;">Register here</a>

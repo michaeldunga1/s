@@ -106,6 +106,36 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     assert.equal((await app.locals.db.query('SELECT count(*)::int AS n FROM comments WHERE id=$1', [comment.id])).rows[0].n, 0);
     assert.equal((await adminClient.post(`/admin/words/${word.id}/delete`, {})).status, 302);
     assert.equal((await guest.request(`/word/${word.id}`)).status, 404);
+
+    const carol = new Client();
+    assert.equal((await carol.post('/auth/register', {
+      username: 'carol', email: 'carol@example.test', password: 'password123', confirm_password: 'password123'
+    })).status, 302);
+    let resetMail;
+    app.locals.sendPasswordResetEmail = async payload => { resetMail = payload; return true; };
+    const forgot = await new Client().post('/auth/forgot-password', { email: 'carol@example.test' });
+    assert.equal(forgot.status, 200);
+    assert.match(await forgot.text(), /reset link has been sent/);
+    assert.equal(resetMail.to, 'carol@example.test');
+    const resetToken = new URL(resetMail.resetUrl).searchParams.get('token');
+    assert.ok(resetToken);
+    assert.equal((await new Client().request(`/auth/reset-password?token=${resetToken}`)).status, 200);
+    assert.equal((await new Client().post('/auth/reset-password', {
+      token: resetToken, password: 'newpassword123', confirm_password: 'newpassword123'
+    })).status, 302);
+    assert.equal((await carol.request('/profile')).headers.get('location'), '/auth/login');
+    const carolLogin = new Client();
+    assert.equal((await carolLogin.post('/auth/login', { username: 'carol', password: 'password123' })).status, 200);
+    assert.equal((await carolLogin.post('/auth/login', { username: 'carol', password: 'newpassword123' })).status, 302);
+    assert.equal((await new Client().post('/auth/reset-password', {
+      token: resetToken, password: 'anotherpass123', confirm_password: 'anotherpass123'
+    })).status, 400);
+    const unknown = await new Client().post('/auth/forgot-password', { email: 'nobody@example.test' });
+    assert.equal(unknown.status, 200);
+    assert.match(await unknown.text(), /reset link has been sent/);
+    assert.equal((await new Client().request('/auth/forgot-password')).status, 200);
+    assert.equal((await new Client().request('/auth/reset-password?token=bogus')).status, 400);
+    assert.match(await (await new Client().request('/auth/login?reset=1')).text(), /password has been reset/);
   } finally {
     if (server) await stop();
     for (const [key, value] of Object.entries(prior)) {

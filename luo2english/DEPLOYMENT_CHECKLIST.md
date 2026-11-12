@@ -144,10 +144,10 @@ If deployment fails:
    npm install express-rate-limit
    ```
 
-3. **Email**: If email notifications are desired:
-   - Configure SMTP settings
-   - Install `nodemailer`
-   - Add email templates
+3. **Email**: Required for password reset:
+   - Configure `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, and `APP_URL`
+   - `nodemailer` is already included as a dependency
+   - Reset tokens are hashed, expire after 1 hour, and are single use
 
 4. **HTTPS**: Required for production
    - Use Let's Encrypt for free certificates
