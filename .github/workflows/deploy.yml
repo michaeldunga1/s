@@ -1,0 +1,119 @@
+name: Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            **/package-lock.json
+
+      - name: Determine changed apps
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.before }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${BASE_SHA:-}" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
+            BASE_SHA="$(git rev-parse "$HEAD_SHA^" 2>/dev/null || git rev-list --max-parents=0 "$HEAD_SHA")"
+          fi
+          apps=""
+          while IFS= read -r dir; do
+            [ -n "$dir" ] || continue
+            if [ -f "$dir/package.json" ]; then
+              apps="${apps:+$apps,}$dir"
+            fi
+          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | awk -F/ 'NF > 1 { print $1 }' | sort -u)
+          printf 'apps=%s\n' "$apps" >> "$GITHUB_OUTPUT"
+          printf 'Changed apps: %s\n' "${apps:-none}"
+
+      - name: Test and build
+        env:
+          APPS: ${{ steps.changed.outputs.apps }}
+        run: |
+          set -euo pipefail
+          has_script() {
+            local dir="$1" script="$2"
+            node -e 'const p=require("./" + process.argv[1] + "/package.json"); process.exit(p.scripts && p.scripts[process.argv[2]] ? 0 : 1)' "$dir" "$script"
+          }
+          run_app() {
+            local dir="$1"
+            echo "::group::$dir"
+            npm --prefix "$dir" ci
+            if has_script "$dir" test; then
+              npm --prefix "$dir" test
+            else
+              echo "No test script in $dir"
+            fi
+            if has_script "$dir" build; then
+              npm --prefix "$dir" run build
+            fi
+            echo "::endgroup::"
+          }
+          if [ -f package.json ] && has_script . test; then
+            npm ci
+            npm test
+            if has_script . build; then
+              npm run build
+            fi
+          elif [ -n "$APPS" ]; then
+            IFS=',' read -ra dirs <<< "$APPS"
+            for dir in "${dirs[@]}"; do
+              run_app "$dir"
+            done
+          else
+            echo "No root test script and no changed app with a package.json; skipping tests"
+          fi
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Deploy over SSH
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d "$HOME/.ssh"
+          printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
+          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
+          ssh -i "$HOME/.ssh/deploy_key" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            "$DEPLOY_USER@$DEPLOY_HOST" \
+            "cd '$DEPLOY_PATH' && bash deploy/deploy.sh"

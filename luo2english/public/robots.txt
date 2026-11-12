@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /comments/
+Disallow: /profile
+
+Sitemap: https://swiftener.com/sitemap.xml
