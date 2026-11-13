@@ -64,6 +64,25 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     const bob = new Client();
     assert.equal((await guest.request('/admin')).status, 302);
     assert.equal((await adminClient.post('/auth/login', { username: 'admin', password: 'password123' })).status, 302);
+    const homeResponse = await guest.request('/');
+    assert.equal(homeResponse.status, 200);
+    assert.equal(homeResponse.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(homeResponse.headers.get('x-frame-options'), 'DENY');
+    assert.equal(homeResponse.headers.get('x-powered-by'), null);
+    assert.match(homeResponse.headers.get('content-security-policy'), /default-src 'self'/);
+    assert.match(homeResponse.headers.get('content-security-policy'), /frame-ancestors 'none'/);
+    assert.equal(homeResponse.headers.get('referrer-policy'), 'strict-origin-when-cross-origin');
+    const adminHome = await adminClient.request('/admin');
+    assert.equal(adminHome.headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.equal(adminHome.headers.get('cache-control'), 'no-store');
+    assert.equal((await guest.request('/auth/login')).headers.get('x-robots-tag'), 'noindex, nofollow');
+    assert.equal((await guest.request('/auth/login', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', 'sec-fetch-site': 'cross-site' },
+      body: ''
+    })).status, 403);
+    assert.match((await guest.request('/favicon.svg')).headers.get('content-type'), /^image\/svg\+xml/);
+    assert.equal((await adminClient.post('/admin/words', { word: 'x'.repeat(101), definition: 'too long' })).status, 400);
     assert.equal((await adminClient.post('/admin/words', { word: 'NyIng', definition: 'A name' })).status, 302);
     assert.equal((await adminClient.post('/admin/words', { word: 'nying', definition: 'duplicate' })).status, 409);
     assert.match(await (await guest.request('/?q=NAME')).text(), /nying/);
@@ -76,6 +95,11 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     }
     const duplicate = new Client();
     assert.match(await (await duplicate.post('/auth/register', { username: 'ALICE', email: 'new@example.test', password: 'password123', confirm_password: 'password123' })).text(), /already in use/);
+    const longUsername = await new Client().post('/auth/register', {
+      username: 'a'.repeat(51), email: 'long@example.test', password: 'password123', confirm_password: 'password123'
+    });
+    assert.equal(longUsername.status, 200);
+    assert.match(await longUsername.text(), /between 3 and 50 characters/);
 
     assert.equal((await guest.post('/admin/words/batch', { words: 'guestword' })).status, 302);
     assert.equal((await alice.post('/admin/words/batch', { words: 'userword' })).status, 403);
@@ -112,6 +136,56 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
       "SELECT count(*)::int AS n FROM words WHERE lower(word) = 'batchword'"
     )).rows[0].n, 1);
 
+    const tooManyWords = await adminClient.post('/admin/words/batch', {
+      words: Array.from({ length: 2001 }, (_, index) => `limitword${index}`).join(' ')
+    });
+    assert.equal(tooManyWords.status, 400);
+    assert.match(await tooManyWords.text(), /at most 2,000 unique words/);
+    assert.equal((await app.locals.db.query(
+      "SELECT count(*)::int AS n FROM words WHERE word LIKE 'limitword%'"
+    )).rows[0].n, 0);
+
+    await app.locals.db.query(`
+      INSERT INTO words (word, definition)
+      SELECT 'paginationword' || lpad(i::text, 2, '0'), ''
+      FROM generate_series(1, 55) AS i
+    `);
+    const homePage1 = await (await guest.request('/')).text();
+    assert.equal((homePage1.match(/class="word-card"/g) || []).length, 24);
+    assert.match(homePage1, /Showing 1–24 of 58 words/);
+    assert.match(homePage1, /href="\/\?page=2"/);
+    assert.match(homePage1, /icons\.svg#chevron-right/);
+    assert.match(homePage1, /icons\.svg#list/);
+    const homePage2 = await (await guest.request('/?page=2')).text();
+    assert.equal((homePage2.match(/class="word-card"/g) || []).length, 24);
+    assert.match(homePage2, /Showing 25–48 of 58 words/);
+    assert.match(homePage2, /href="\/\?page=3"/);
+    const homePage3 = await (await guest.request('/?page=3')).text();
+    assert.equal((homePage3.match(/class="word-card"/g) || []).length, 10);
+    assert.match(homePage3, /Showing 49–58 of 58 words/);
+    assert.doesNotMatch(homePage3, /href="\/\?page=4"/);
+    const clamped = await (await guest.request('/?page=999')).text();
+    assert.equal((clamped.match(/class="word-card"/g) || []).length, 10);
+    assert.match(clamped, /Showing 49–58 of 58 words/);
+    assert.equal((await (await guest.request('/?page=abc')).text()).match(/class="word-card"/g).length, 24);
+
+    const searchPage1 = await (await guest.request('/?q=paginationword')).text();
+    assert.equal((searchPage1.match(/class="word-card"/g) || []).length, 24);
+    assert.match(searchPage1, /Showing 1–24 of 55 words matching paginationword/);
+    assert.match(searchPage1, /href="\/\?q=paginationword&amp;page=2"/);
+    const searchPage3 = await (await guest.request('/?q=paginationword&page=3')).text();
+    assert.equal((searchPage3.match(/class="word-card"/g) || []).length, 7);
+    assert.match(searchPage3, /Showing 49–55 of 55 words matching paginationword/);
+
+    const adminWordsPage1 = await (await adminClient.request('/admin/words')).text();
+    assert.equal((adminWordsPage1.match(/<tr>\s*<td><strong>/g) || []).length, 50);
+    assert.match(adminWordsPage1, /Showing 1–50 of 58 words/);
+    assert.match(adminWordsPage1, /href="\/admin\/words\?page=2"/);
+    const adminWordsPage2 = await (await adminClient.request('/admin/words?page=2')).text();
+    assert.equal((adminWordsPage2.match(/<tr>\s*<td><strong>/g) || []).length, 8);
+    assert.match(adminWordsPage2, /Showing 51–58 of 58 words/);
+    assert.doesNotMatch(adminWordsPage2, /href="\/admin\/words\?page=3"/);
+
     const batchWord = (await app.locals.db.query("SELECT id FROM words WHERE word = 'batchword'")).rows[0];
     assert.equal((await adminClient.request(`/admin/words/${batchWord.id}/edit`)).status, 200);
     assert.equal((await adminClient.post(`/admin/words/${batchWord.id}`, {
@@ -133,7 +207,12 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     assert.equal((await (await bob.json(`/comments/${comment.id}/vote`, 'POST', { value: -1 })).json()).action, 'removed');
     assert.equal((await bob.json(`/comments/${comment.id}`, 'PUT', { body: 'not mine' })).status, 403);
     assert.equal((await alice.json(`/comments/${comment.id}`, 'PUT', { body: 'updated comment' })).status, 200);
-    assert.match(await (await guest.request(`/word/${word.id}`)).text(), /updated comment/);
+    const wordPage = await (await guest.request(`/word/${word.id}`)).text();
+    assert.match(wordPage, /updated comment/);
+    assert.match(wordPage, /BreadcrumbList/);
+    const sitemap = await (await guest.request('/sitemap.xml')).text();
+    assert.match(sitemap, /<changefreq>daily<\/changefreq>/);
+    assert.match(sitemap, /<lastmod>/);
     const schemaPage = await adminClient.request('/admin/schema');
     assert.equal(schemaPage.status, 200);
     const schemaHtml = await schemaPage.text();
@@ -170,7 +249,7 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     })).status, 302);
     assert.equal((await carol.request('/profile')).headers.get('location'), '/auth/login');
     const carolLogin = new Client();
-    assert.equal((await carolLogin.post('/auth/login', { username: 'carol', password: 'password123' })).status, 200);
+    assert.equal((await carolLogin.post('/auth/login', { username: 'carol', password: 'password123' })).status, 401);
     assert.equal((await carolLogin.post('/auth/login', { username: 'carol', password: 'newpassword123' })).status, 302);
     assert.equal((await new Client().post('/auth/reset-password', {
       token: resetToken, password: 'anotherpass123', confirm_password: 'anotherpass123'
@@ -181,6 +260,18 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     assert.equal((await new Client().request('/auth/forgot-password')).status, 200);
     assert.equal((await new Client().request('/auth/reset-password?token=bogus')).status, 400);
     assert.match(await (await new Client().request('/auth/login?reset=1')).text(), /password has been reset/);
+
+    const rateClient = new Client();
+    for (let attempt = 0; attempt < 10; attempt += 1) {
+      assert.equal((await rateClient.post('/auth/login', {
+        username: 'ratelimituser', password: 'wrong-password'
+      })).status, 401);
+    }
+    const blockedLogin = await rateClient.post('/auth/login', {
+      username: 'ratelimituser', password: 'wrong-password'
+    });
+    assert.equal(blockedLogin.status, 429);
+    assert.ok(Number(blockedLogin.headers.get('retry-after')) > 0);
   } finally {
     if (server) await stop();
     for (const [key, value] of Object.entries(prior)) {

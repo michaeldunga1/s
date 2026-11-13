@@ -1,27 +1,36 @@
 const express = require('express');
 const db = require('../db/postgres');
 const { requireAuth } = require('../middleware/auth');
+const { parsePage, paginate } = require('../lib/pagination');
 const router = express.Router();
 
 // XML sitemap for public dictionary content.
 router.get('/sitemap.xml', async (req, res) => {
   try {
     const { rows } = await db.query(
-      'SELECT id FROM words ORDER BY id ASC'
+      'SELECT id, updated_at FROM words ORDER BY id ASC'
     );
 
     const baseUrl = 'https://swiftener.com';
-    const urls = [
-      '/',
-      '/privacy',
-      '/terms',
-      '/cookies',
-      ...rows.map(row => `/word/${row.id}`)
+    const entries = [
+      { path: '/', changefreq: 'daily', priority: '1.0' },
+      { path: '/privacy', changefreq: 'yearly', priority: '0.3' },
+      { path: '/terms', changefreq: 'yearly', priority: '0.3' },
+      { path: '/cookies', changefreq: 'yearly', priority: '0.3' },
+      ...rows.map(row => ({
+        path: `/word/${row.id}`,
+        changefreq: 'monthly',
+        priority: '0.8',
+        lastmod: row.updated_at ? new Date(row.updated_at).toISOString().slice(0, 10) : null
+      }))
     ];
 
-    const xmlUrls = urls.map(path => `
+    const xmlUrls = entries.map(entry => `
   <url>
-    <loc>${baseUrl}${path}</loc>
+    <loc>${baseUrl}${entry.path}</loc>${entry.lastmod ? `
+    <lastmod>${entry.lastmod}</lastmod>` : ''}
+    <changefreq>${entry.changefreq}</changefreq>
+    <priority>${entry.priority}</priority>
   </url>`).join('');
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -37,12 +46,17 @@ router.get('/sitemap.xml', async (req, res) => {
   }
 });
 
-for (const [url, title, page] of [
-  ['/privacy', 'Privacy policy', 'privacy'],
-  ['/terms', 'Terms of use', 'terms'],
-  ['/cookies', 'Cookie and storage notice', 'cookies']
+for (const [url, title, page, description] of [
+  ['/privacy', 'Privacy policy', 'privacy', 'How Luo2English handles account information, comments, and operational data.'],
+  ['/terms', 'Terms of use', 'terms', 'The rules for using the Luo2English dictionary and community features.'],
+  ['/cookies', 'Cookie and storage notice', 'cookies', 'How Luo2English uses cookies and browser storage for sign-in and core features.']
 ]) {
-  router.get(url, (req, res) => res.render('legal', { title, page }));
+  router.get(url, (req, res) => res.render('legal', {
+    title,
+    page,
+    description,
+    canonicalUrl: `https://swiftener.com${url}`
+  }));
 }
 
 // View the current user's profile
@@ -69,21 +83,40 @@ router.get('/profile', requireAuth, async (req, res) => {
   }
 });
 
-// Home page - list all words
+// Home page - list words with search and pagination
 router.get('/', async (req, res) => {
   try {
     if (req.query.q !== undefined && typeof req.query.q !== 'string') return res.status(400).send('Invalid search query.');
     const query = (req.query.q || '').trim();
     if (query.length > 200) return res.status(400).send('Search query must be at most 200 characters.');
-    const normalized = query.toLocaleLowerCase();
-    const result = await db.query(`
-      SELECT id, word, definition FROM words ORDER BY word ASC
-    `);
-    const words = result.rows.filter(word => !normalized || [word.word, word.definition].some(value => value.toLocaleLowerCase().includes(normalized)));
+    const pageSize = 24;
+    const page = parsePage(req.query.page);
+    const params = [];
+    let where = '';
+    if (query) {
+      params.push(query);
+      where = 'WHERE position(lower($1) in lower(word)) > 0 OR position(lower($1) in lower(definition)) > 0';
+    }
+
+    const { rows: [{ n: totalItems }] } = await db.query(`SELECT count(*)::int AS n FROM words ${where}`, params);
+    const pager = paginate({ page, pageSize, totalItems });
+    const result = await db.query(
+      `SELECT id, word, definition FROM words ${where} ORDER BY word ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, pageSize, pager.offset]
+    );
+    const pageUrl = targetPage => {
+      const search = new URLSearchParams();
+      if (query) search.set('q', query);
+      if (targetPage > 1) search.set('page', String(targetPage));
+      const suffix = search.toString();
+      return suffix ? `/?${suffix}` : '/';
+    };
 
     res.render('index', {
-      words,
+      words: result.rows,
       query,
+      pagination: pager,
+      pageUrl,
       title: 'Luo to English Dictionary | Luo2English',
       metaDescription: 'Explore the Luo to English dictionary. Search Dholuo words, discover English meanings, and learn with a community of speakers.',
       canonicalUrl: 'https://swiftener.com/',
@@ -131,18 +164,28 @@ router.get('/word/:id', async (req, res) => {
 
     const canonicalUrl = `https://swiftener.com/word/${word.id}`;
 
-    const structuredData = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'DefinedTerm',
-      name: word.word,
-      description: plainDefinition || metaDescription,
-      inDefinedTermSet: {
-        '@type': 'DefinedTermSet',
-        name: 'Luo to English Dictionary',
-        url: 'https://swiftener.com/'
+    const structuredData = JSON.stringify([
+      {
+        '@context': 'https://schema.org',
+        '@type': 'DefinedTerm',
+        name: word.word,
+        description: plainDefinition || metaDescription,
+        inDefinedTermSet: {
+          '@type': 'DefinedTermSet',
+          name: 'Luo to English Dictionary',
+          url: 'https://swiftener.com/'
+        },
+        url: canonicalUrl
       },
-      url: canonicalUrl
-    }).replace(/</g, '\\u003c');
+      {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Dictionary', item: 'https://swiftener.com/' },
+          { '@type': 'ListItem', position: 2, name: word.word, item: canonicalUrl }
+        ]
+      }
+    ]).replace(/</g, '\\u003c');
 
     res.render('word-detail', {
       word,

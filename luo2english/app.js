@@ -6,8 +6,11 @@ require('dotenv').config();
 const db = require('./db/postgres');
 const { sendPasswordResetEmail } = require('./lib/mailer');
 const { attachUser, validateSession } = require('./middleware/auth');
+const { flashMessages } = require('./middleware/flash');
+const { securityHeaders, sameSiteRequestGuard } = require('./middleware/security');
 
 const app = express();
+app.disable('x-powered-by');
 if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
   throw new Error('SESSION_SECRET is required in production');
 }
@@ -18,9 +21,11 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
+app.use(securityHeaders);
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: false, limit: '128kb' }));
+app.use(express.json({ limit: '16kb' }));
+app.use(sameSiteRequestGuard);
 
 // Session middleware
 const sessionStore = new (require('connect-pg-simple')(session))({ pool: db, createTableIfMissing: true });
@@ -41,6 +46,7 @@ app.use(validateSession);
 
 // Attach user to locals
 app.use(attachUser);
+app.use(flashMessages);
 
 // Routes
 app.use('/', require('./routes/public'));

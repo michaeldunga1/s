@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %></title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta name="theme-color" content="#684728">
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body>
@@ -49,9 +51,14 @@
               id="username" 
               name="username" 
               value="<%= username || '' %>"
+              autocomplete="username"
+              autocapitalize="none"
+              spellcheck="false"
+              minlength="3"
+              maxlength="50"
               required
             >
-            <small style="color: #666;">At least 3 characters</small>
+            <small style="color: #666;">3–50 characters</small>
           </div>
 
           <div class="form-group">
@@ -61,6 +68,8 @@
               id="email" 
               name="email" 
               value="<%= email || '' %>"
+              autocomplete="email"
+              maxlength="254"
               required
             >
           </div>
@@ -72,6 +81,8 @@
                 type="password" 
                 id="password" 
                 name="password" 
+                autocomplete="new-password"
+                minlength="8"
                 required
               >
               <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false" aria-controls="password">
@@ -88,6 +99,8 @@
                 type="password" 
                 id="confirm_password" 
                 name="confirm_password" 
+                autocomplete="new-password"
+                minlength="8"
                 required
               >
               <button type="button" class="password-toggle" data-toggle-password="confirm_password" aria-label="Show password" aria-pressed="false" aria-controls="confirm_password">

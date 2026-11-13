@@ -1,0 +1,35 @@
+<% if (pagination.totalPages > 1) { %>
+  <nav class="pagination" aria-label="Pagination">
+    <% if (pagination.hasPrev) { %>
+      <a class="pagination-link" href="<%= pageUrl(pagination.page - 1) %>" rel="prev">
+        <svg class="icon pagination-icon" aria-hidden="true"><use href="/icons.svg#chevron-left"></use></svg>
+        <span class="pagination-label">Previous</span>
+      </a>
+    <% } else { %>
+      <span class="pagination-link is-disabled" aria-disabled="true">
+        <svg class="icon pagination-icon" aria-hidden="true"><use href="/icons.svg#chevron-left"></use></svg>
+        <span class="pagination-label">Previous</span>
+      </span>
+    <% } %>
+    <% pagination.pages.forEach(page => { %>
+      <% if (page === null) { %>
+        <span class="pagination-ellipsis" aria-hidden="true">…</span>
+      <% } else if (page === pagination.page) { %>
+        <span class="pagination-link is-current" aria-current="page"><%= page %></span>
+      <% } else { %>
+        <a class="pagination-link" href="<%= pageUrl(page) %>"><%= page %></a>
+      <% } %>
+    <% }); %>
+    <% if (pagination.hasNext) { %>
+      <a class="pagination-link" href="<%= pageUrl(pagination.page + 1) %>" rel="next">
+        <span class="pagination-label">Next</span>
+        <svg class="icon pagination-icon" aria-hidden="true"><use href="/icons.svg#chevron-right"></use></svg>
+      </a>
+    <% } else { %>
+      <span class="pagination-link is-disabled" aria-disabled="true">
+        <span class="pagination-label">Next</span>
+        <svg class="icon pagination-icon" aria-hidden="true"><use href="/icons.svg#chevron-right"></use></svg>
+      </span>
+    <% } %>
+  </nav>
+<% } %>

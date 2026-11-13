@@ -7,8 +7,8 @@ Public draft legal notices are available at `/privacy`, `/terms`, and `/cookies`
 ## Features
 
 ### Core
-- **Public Dictionary**: Browse Luo words and their English definitions
-- **Search**: Search words and definitions from the dictionary page, including without JavaScript.
+- **Public Dictionary**: Browse Luo words and their English definitions in paginated pages
+- **Search**: Search words and definitions from the dictionary page, including without JavaScript; results are paginated.
 - **User Authentication**: Register with username, email, and password (hashed with bcrypt)
 - **Role-Based Access Control**:
   - **Admin**: Create, edit, and delete words and their definitions; delete any comment; view the read-only database schema from the admin dashboard
@@ -163,7 +163,7 @@ All foreign keys have corresponding indexes for performance.
 ## API Routes
 
 ### Public
-- `GET /` - Home page with word list
+- `GET /` - Home page with a paginated word list (`?q=` search, `?page=` page number)
 - `GET /word/:id` - View word with its definition and comments
 
 ### Authentication
@@ -201,8 +201,19 @@ All foreign keys have corresponding indexes for performance.
 - **Sessions**: 7-day expiration, httpOnly cookies, sameSite='strict'
 - **XSS**: All user content escaped in EJS templates
 - **SQL Injection**: Parameterized queries throughout
-- **CSRF**: Express-session SameSite protection
+- **CSRF**: SameSite cookies plus a Fetch Metadata same-site request guard
+- **Security headers**: CSP, HSTS in production, frame denial, MIME sniffing protection, referrer and permissions policies
+- **Rate limiting**: Login, registration, password forgot, and password reset attempts are throttled
+- **Input limits**: Word, definition, batch, username, email, query, and comment sizes are capped
 - **Session Regeneration**: On login
+- **Vulnerability contact**: `/.well-known/security.txt`
+
+## SEO
+
+- Canonical URLs, Open Graph and Twitter metadata on public pages
+- `DefinedTerm` and `BreadcrumbList` structured data for dictionary entries
+- XML sitemap with last-modified, change-frequency, and priority hints
+- `robots.txt`, favicon, and noindex directives for auth, admin, comments, and profile routes
 
 ## Usage Examples
 
@@ -217,8 +228,9 @@ All foreign keys have corresponding indexes for performance.
 3. Submit
 
 ### View dictionary
-1. Home page shows all words
-2. Click a word to view its definition and comments
+1. Home page shows words in pages of 24
+2. Use the page links to browse, or search to filter results
+3. Click a word to view its definition and comments
 
 ### Post a comment (as logged-in user)
 1. Go to a word detail page
@@ -253,6 +265,7 @@ Run the PostgreSQL integration test against a dedicated database whose user may
 create schemas. It creates and removes an isolated schema:
 
 ```bash
+npm run test:unit
 POSTGRES_TEST_URL='postgresql://localhost/luo_test' npm run test:postgres
 ```
 

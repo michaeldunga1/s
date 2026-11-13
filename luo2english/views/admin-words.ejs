@@ -22,38 +22,52 @@
   </nav>
 
   <div class="container">
+    <%- include('partials/flash') %>
     <div class="admin-header">
       <h1 class="admin-title">Manage Words</h1>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <a href="/admin/words/batch" class="btn btn-secondary">Batch Add</a>
-        <a href="/admin/words/new" class="btn btn-primary">+ Add Word</a>
+        <a href="/admin/words/batch" class="btn btn-secondary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#list-plus"></use></svg> Batch Add</a>
+        <a href="/admin/words/new" class="btn btn-primary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#plus"></use></svg> Add Word</a>
       </div>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Word</th>
-          <th>Definition</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% words.forEach(word => { %>
-          <tr>
-            <td><strong><%= word.word %></strong></td>
-            <td style="white-space: pre-wrap;"><%= word.definition || 'No definition yet' %></td>
-            <td>
-              <a href="/word/<%= word.id %>" class="btn-link" style="color: #D4A574;">View</a>
-              <a href="/admin/words/<%= word.id %>/edit" class="btn-link" style="color: #D4A574;">Edit</a>
-              <form method="POST" action="/admin/words/<%= word.id %>/delete" style="display: inline;">
-                <button type="submit" class="btn-link" style="color: #C9453A; cursor: pointer; border: none; background: none; padding: 0;" onclick="return confirm('Delete this word?')">Delete</button>
-              </form>
-            </td>
-          </tr>
-        <% }); %>
-      </tbody>
-    </table>
+    <% if (words.length === 0) { %>
+      <div class="card">
+        <p style="text-align: center; color: #666;">No words available yet.</p>
+      </div>
+    <% } else { %>
+      <p class="pagination-summary" role="status">
+        <svg class="icon pagination-icon" aria-hidden="true"><use href="/icons.svg#list"></use></svg>
+        <span>Showing <%= pagination.firstItem %>–<%= pagination.lastItem %> of <%= pagination.totalItems %> word<%= pagination.totalItems === 1 ? '' : 's' %>.</span>
+      </p>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Definition</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% words.forEach(word => { %>
+              <tr>
+                <td><strong><%= word.word %></strong></td>
+                <td style="white-space: pre-wrap;"><%= word.definition || 'No definition yet' %></td>
+                <td>
+                  <a href="/word/<%= word.id %>" class="btn-link action-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#eye"></use></svg> View</a>
+                  <a href="/admin/words/<%= word.id %>/edit" class="btn-link action-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#pencil"></use></svg> Edit</a>
+                  <form method="POST" action="/admin/words/<%= word.id %>/delete" style="display: inline;">
+                    <button type="submit" class="btn-link action-link" style="color: #C9453A; cursor: pointer; border: none; background: none; padding: 0;" onclick="return confirm('Delete this word?')"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#trash"></use></svg> Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <%- include('partials/pagination', { pagination, pageUrl }) %>
+    <% } %>
   </div>
 
   <%- include('partials/legal-footer') %>

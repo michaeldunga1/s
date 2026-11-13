@@ -22,9 +22,10 @@
   </nav>
 
   <div class="container">
+    <%- include('partials/flash') %>
     <div class="admin-header">
       <h1 class="admin-title">Batch Add Words</h1>
-      <a href="/admin/words" class="btn btn-secondary">Back to Words</a>
+      <a href="/admin/words" class="btn btn-secondary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#arrow-left"></use></svg> Back to Words</a>
     </div>
 
     <% if (errors && errors.length > 0) { %>
@@ -69,10 +70,10 @@
       <form method="POST" action="/admin/words/batch">
         <div class="form-group">
           <label for="words">Words</label>
-          <textarea id="words" name="words" rows="12" placeholder="Paste or type words separated by spaces, commas, or new lines"><%= text %></textarea>
-          <small style="color: #666;">Definitions are left empty; you can add them later from the word edit form.</small>
+          <textarea id="words" name="words" rows="12" maxlength="100000" placeholder="Paste or type words separated by spaces, commas, or new lines"><%= text %></textarea>
+          <small style="color: #666;">Definitions are left empty; you can add them later from the word edit form. Up to 2,000 unique words per batch.</small>
         </div>
-        <button type="submit" class="btn btn-primary">Insert Words</button>
+        <button type="submit" class="btn btn-primary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#list-plus"></use></svg> Insert Words</button>
         <a href="/admin/words" class="btn btn-secondary">Cancel</a>
       </form>
     </div>

@@ -2,8 +2,15 @@ const express = require('express');
 const db = require('../db/postgres');
 const { requireAdmin } = require('../middleware/auth');
 const { extractWords } = require('../lib/batch-words');
+const { parsePage, paginate } = require('../lib/pagination');
+const { setFlash } = require('../middleware/flash');
 const crypto = require('node:crypto');
 const router = express.Router();
+
+const MAX_BATCH_TEXT_LENGTH = 100000;
+const MAX_BATCH_WORDS = 2000;
+const MAX_WORD_LENGTH = 100;
+const MAX_DEFINITION_LENGTH = 5000;
 
 router.use(requireAdmin);
 for (const param of ['id', 'word_id']) {
@@ -94,13 +101,22 @@ router.post('/users/:id/delete', async (req, res) => {
     return res.status(400).render('admin-delete-user', { title: 'Delete User', account, token: req.session.deleteUserToken, error: 'Confirm that you want to permanently delete this user.' });
   }
   await db.query("DELETE FROM users WHERE id = $1 AND role = 'user'", [account.id]);
+  setFlash(req, 'success', `User ${account.username} was deleted.`);
   res.redirect('/admin/users');
 });
 
 router.get('/words', async (req, res) => {
   try {
-    const { rows: words } = await db.query('SELECT id, word, definition FROM words ORDER BY word ASC');
-    res.render('admin-words', { title: 'Manage Words', words });
+    const pageSize = 50;
+    const page = parsePage(req.query.page);
+    const { rows: [{ n: totalItems }] } = await db.query('SELECT count(*)::int AS n FROM words');
+    const pagination = paginate({ page, pageSize, totalItems });
+    const { rows: words } = await db.query(
+      'SELECT id, word, definition FROM words ORDER BY word ASC LIMIT $1 OFFSET $2',
+      [pageSize, pagination.offset]
+    );
+    const pageUrl = targetPage => targetPage > 1 ? `/admin/words?page=${targetPage}` : '/admin/words';
+    res.render('admin-words', { title: 'Manage Words', words, pagination, pageUrl });
   } catch (error) {
     console.error(error);
     res.status(500).render('error', { message: 'Failed to load words' });
@@ -117,6 +133,14 @@ router.get('/words/batch', (req, res) => {
 
 router.post('/words/batch', async (req, res, next) => {
   const text = typeof req.body.words === 'string' ? req.body.words : '';
+  if (text.length > MAX_BATCH_TEXT_LENGTH) {
+    return res.status(413).render('admin-batch-words', {
+      title: 'Batch Add Words',
+      text: '',
+      errors: [`Batch text must be ${MAX_BATCH_TEXT_LENGTH.toLocaleString()} characters or fewer.`],
+      result: null
+    });
+  }
   const extractedWords = extractWords(text);
 
   if (extractedWords.length === 0) {
@@ -129,6 +153,22 @@ router.post('/words/batch', async (req, res, next) => {
   }
 
   const uniqueWords = [...new Set(extractedWords)];
+  if (uniqueWords.length > MAX_BATCH_WORDS) {
+    return res.status(400).render('admin-batch-words', {
+      title: 'Batch Add Words',
+      text,
+      errors: [`Submit at most ${MAX_BATCH_WORDS.toLocaleString()} unique words at a time.`],
+      result: null
+    });
+  }
+  if (uniqueWords.some(word => word.length > MAX_WORD_LENGTH)) {
+    return res.status(400).render('admin-batch-words', {
+      title: 'Batch Add Words',
+      text,
+      errors: [`Each word must be ${MAX_WORD_LENGTH} characters or fewer.`],
+      result: null
+    });
+  }
   try {
     const client = await db.connect();
     let existingWords;
@@ -196,7 +236,11 @@ async function saveWord(req, res, next) {
   const definition = typeof req.body.definition === 'string' ? req.body.definition.trim() : '';
   const input = { id: req.params.id, word, definition };
   const title = editing ? 'Edit Word' : 'Add Word';
-  if (!word) return res.status(400).render('admin-word-form', { title, word: input, errors: ['Word is required'] });
+  const errors = [];
+  if (!word) errors.push('Word is required');
+  else if (word.length > MAX_WORD_LENGTH) errors.push(`Word must be ${MAX_WORD_LENGTH} characters or fewer`);
+  if (definition.length > MAX_DEFINITION_LENGTH) errors.push(`Definition must be ${MAX_DEFINITION_LENGTH} characters or fewer`);
+  if (errors.length > 0) return res.status(400).render('admin-word-form', { title, word: input, errors });
   try {
     if (editing) {
       const result = await db.query('UPDATE words SET word = $1, definition = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3',
@@ -205,6 +249,7 @@ async function saveWord(req, res, next) {
     } else {
       await db.query('INSERT INTO words (word, definition) VALUES ($1, $2)', [word, definition]);
     }
+    setFlash(req, 'success', editing ? 'Word updated.' : 'Word added.');
     res.redirect('/admin/words');
   } catch (error) {
     if (error.code === '23505') {
@@ -219,7 +264,8 @@ router.post('/words/:id', saveWord);
 
 router.post('/words/:id/delete', async (req, res) => {
   try {
-    await db.query('DELETE FROM words WHERE id = $1', [req.params.id]);
+    const result = await db.query('DELETE FROM words WHERE id = $1', [req.params.id]);
+    setFlash(req, 'success', result.rowCount ? 'Word deleted.' : 'Word not found.');
     res.redirect('/admin/words');
   } catch (error) {
     console.error(error);

@@ -31,9 +31,10 @@
   </nav>
 
   <div class="container">
+    <%- include('partials/flash') %>
     <div class="admin-header">
       <h1 class="admin-title">Admin Dashboard</h1>
-      <a href="/admin/words/new" class="btn btn-primary">+ Add Word</a>
+      <a href="/admin/words/new" class="btn btn-primary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#plus"></use></svg> Add Word</a>
     </div>
 
     <div class="stats-grid">
@@ -57,11 +58,11 @@
 
     <div class="card">
       <div class="card-header">Quick Links</div>
-      <ul style="list-style: none;">
-        <li><a href="/admin/words" class="btn-link" style="color: #D4A574;">Manage Words</a></li>
-        <li><a href="/admin/words/batch" class="btn-link" style="color: #D4A574;">Batch Add Words</a></li>
-        <li><a href="/admin/schema" class="btn-link" style="color: #D4A574;">Database Schema</a></li>
-        <li><a href="/admin/users" class="btn-link" style="color: #D4A574;">Manage Users</a></li>
+      <ul class="quick-links">
+        <li><a href="/admin/words" class="btn-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#list"></use></svg> Manage Words</a></li>
+        <li><a href="/admin/words/batch" class="btn-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#list-plus"></use></svg> Batch Add Words</a></li>
+        <li><a href="/admin/schema" class="btn-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Database Schema</a></li>
+        <li><a href="/admin/users" class="btn-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#conversation"></use></svg> Manage Users</a></li>
       </ul>
     </div>
   </div>

@@ -22,6 +22,7 @@
   </nav>
 
   <div class="container">
+    <%- include('partials/flash') %>
     <div style="max-width: 500px; margin: 2rem auto;">
       <div class="card">
         <div class="card-header"><%= title %></div>
@@ -35,11 +36,11 @@
         <form method="POST" action="<%= word && word.id ? `/admin/words/${word.id}` : `/admin/words` %>">
           <div class="form-group">
             <label for="word">Word (Luo)</label>
-            <input type="text" id="word" name="word" value="<%= word?.word || '' %>" required>
+            <input type="text" id="word" name="word" value="<%= word?.word || '' %>" maxlength="100" required autocomplete="off">
           </div>
           <div class="form-group">
             <label for="definition">Definition (English)</label>
-            <textarea id="definition" name="definition" rows="6"><%= word?.definition || '' %></textarea>
+            <textarea id="definition" name="definition" rows="6" maxlength="5000"><%= word?.definition || '' %></textarea>
           </div>
           <button type="submit" class="btn btn-primary">Save Word</button>
           <a href="/admin/words" class="btn btn-secondary">Cancel</a>

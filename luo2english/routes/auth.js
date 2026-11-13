@@ -3,40 +3,23 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('../db/postgres');
 const { ensurePasswordResetSchema } = db;
+const { createRateLimiter } = require('../lib/rate-limit');
 const router = express.Router();
 
 const RESET_TOKEN_TTL_MS = 60 * 60 * 1000;
-const MAX_ATTEMPTS = 10;
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
+const forgotPasswordLimiter = createRateLimiter({ max: 10, windowMs: ATTEMPT_WINDOW_MS });
+const resetPasswordLimiter = createRateLimiter({ max: 10, windowMs: ATTEMPT_WINDOW_MS });
+const loginLimiter = createRateLimiter({ max: 10, windowMs: ATTEMPT_WINDOW_MS });
+const registerLimiter = createRateLimiter({ max: 20, windowMs: ATTEMPT_WINDOW_MS });
 
 // Helper: Validate email format
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+const isValidEmail = (email) => email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 // Helper: Validate password (min 8 chars)
 const isValidPassword = (password) => typeof password === 'string' && password.length >= 8 && Buffer.byteLength(password) <= 72;
 
 const hashResetToken = (token) => crypto.createHash('sha256').update(token).digest('hex');
-
-const attemptWindows = new Map();
-
-function tooManyAttempts(req, action) {
-  const key = `${action}:${req.ip}`;
-  const now = Date.now();
-  const entry = attemptWindows.get(key);
-  if (!entry || entry.resetAt <= now) {
-    attemptWindows.set(key, { count: 1, resetAt: now + ATTEMPT_WINDOW_MS });
-  } else if (entry.count >= MAX_ATTEMPTS) {
-    return true;
-  } else {
-    entry.count += 1;
-  }
-  if (attemptWindows.size > 1000) {
-    for (const [attemptKey, value] of attemptWindows) {
-      if (value.resetAt <= now) attemptWindows.delete(attemptKey);
-    }
-  }
-  return false;
-}
 
 function renderForgotPassword(res, { status = 200, errors = [], email = '', sent = false } = {}) {
   return res.status(status).render('forgot-password', {
@@ -77,14 +60,27 @@ router.get('/register', (req, res) => {
 
 // Register (POST)
 router.post('/register', async (req, res, next) => {
-  const { username, email, password, confirm_password } = req.body;
+  const rate = registerLimiter.consume(req.ip);
+  const username = typeof req.body.username === 'string' ? req.body.username.trim().toLowerCase() : '';
+  const email = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+  const { password, confirm_password } = req.body;
   const errors = [];
 
-  // Validation
-  if (typeof username !== 'string' || username.trim().length < 3) {
-    errors.push('Username must be at least 3 characters');
+  if (rate.blocked) {
+    res.set('Retry-After', String(rate.retryAfter));
+    return res.status(429).render('register', {
+      title: 'Register',
+      errors: ['Too many registration attempts. Please try again later.'],
+      username,
+      email
+    });
   }
-  if (typeof email !== 'string' || !isValidEmail(email)) {
+
+  // Validation
+  if (username.length < 3 || username.length > 50) {
+    errors.push('Username must be between 3 and 50 characters');
+  }
+  if (!isValidEmail(email)) {
     errors.push('Invalid email format');
   }
   if (!password || !isValidPassword(password)) {
@@ -106,7 +102,7 @@ router.post('/register', async (req, res, next) => {
   try {
     // Check if username or email already exists
     const existing = (await db.query('SELECT id FROM users WHERE username = $1 OR email = $2',
-      [username.toLowerCase(), email.toLowerCase()])).rows[0];
+      [username, email])).rows[0];
 
     if (existing) {
       errors.push('Username or email already in use');
@@ -125,7 +121,7 @@ router.post('/register', async (req, res, next) => {
     const result = await db.query(`
       INSERT INTO users (username, email, password_hash, role)
       VALUES ($1, $2, $3, 'user') RETURNING id, username, role
-    `, [username.toLowerCase(), email.toLowerCase(), password_hash]);
+    `, [username, email, password_hash]);
 
     signIn(req, res, next, result.rows[0]);
   } catch (error) {
@@ -159,10 +155,11 @@ router.get('/login', (req, res) => {
 
 // Login (POST)
 router.post('/login', async (req, res, next) => {
-  const { username, password } = req.body;
+  const username = typeof req.body.username === 'string' ? req.body.username.trim() : '';
+  const password = req.body.password;
   const errors = [];
 
-  if (typeof username !== 'string' || !username || typeof password !== 'string' || !password) {
+  if (!username || typeof password !== 'string' || !password) {
     errors.push('Username and password required');
   }
 
@@ -175,19 +172,34 @@ router.post('/login', async (req, res, next) => {
     });
   }
 
+  const loginKey = `${req.ip}:${username.toLowerCase()}`;
+  const retryAfter = loginLimiter.status(loginKey);
+  if (retryAfter) {
+    res.set('Retry-After', String(retryAfter));
+    return res.status(429).render('login', {
+      title: 'Login',
+      errors: ['Too many login attempts. Please try again later.'],
+      username,
+      success: ''
+    });
+  }
+
   try {
     const user = (await db.query('SELECT id, username, password_hash, role FROM users WHERE username = $1',
       [username.toLowerCase()])).rows[0];
 
     if (!user || !bcrypt.compareSync(password, user.password_hash)) {
+      loginLimiter.consume(loginKey);
       errors.push('Invalid username or password');
-      return res.render('login', {
+      return res.status(401).render('login', {
         title: 'Login',
         errors,
-        username
+        username,
+        success: ''
       });
     }
 
+    loginLimiter.reset(loginKey);
     signIn(req, res, next, user);
   } catch (error) {
     console.error(error);
@@ -208,7 +220,9 @@ router.get('/forgot-password', (req, res) => {
 
 // Forgot password (POST)
 router.post('/forgot-password', async (req, res, next) => {
-  if (tooManyAttempts(req, 'forgot-password')) {
+  const rate = forgotPasswordLimiter.consume(req.ip);
+  if (rate.blocked) {
+    res.set('Retry-After', String(rate.retryAfter));
     return renderForgotPassword(res, {
       status: 429,
       email: typeof req.body.email === 'string' ? req.body.email.trim() : '',
@@ -302,7 +316,9 @@ router.post('/reset-password', async (req, res, next) => {
   const token = typeof req.body.token === 'string' ? req.body.token.trim() : '';
   const { password, confirm_password } = req.body;
 
-  if (tooManyAttempts(req, 'reset-password')) {
+  const rate = resetPasswordLimiter.consume(req.ip);
+  if (rate.blocked) {
+    res.set('Retry-After', String(rate.retryAfter));
     return renderResetPassword(res, {
       status: 429,
       token,
