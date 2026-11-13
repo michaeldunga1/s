@@ -82,6 +82,9 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
       body: ''
     })).status, 403);
     assert.match((await guest.request('/favicon.svg')).headers.get('content-type'), /^image\/svg\+xml/);
+    const securityTxt = await guest.request('/.well-known/security.txt');
+    assert.equal(securityTxt.status, 200);
+    assert.match(await securityTxt.text(), /^Contact:/);
     assert.equal((await adminClient.post('/admin/words', { word: 'x'.repeat(101), definition: 'too long' })).status, 400);
     assert.equal((await adminClient.post('/admin/words', { word: 'NyIng', definition: 'A name' })).status, 302);
     assert.equal((await adminClient.post('/admin/words', { word: 'nying', definition: 'duplicate' })).status, 409);

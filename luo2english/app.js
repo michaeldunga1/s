@@ -22,6 +22,7 @@ app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
 app.use(securityHeaders);
+app.use('/.well-known', express.static(path.join(__dirname, 'public/.well-known'), { dotfiles: 'allow' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: false, limit: '128kb' }));
 app.use(express.json({ limit: '16kb' }));
