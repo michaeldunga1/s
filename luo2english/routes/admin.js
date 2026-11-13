@@ -1,6 +1,7 @@
 const express = require('express');
 const db = require('../db/postgres');
 const { requireAdmin } = require('../middleware/auth');
+const { extractWords } = require('../lib/batch-words');
 const crypto = require('node:crypto');
 const router = express.Router();
 
@@ -108,6 +109,74 @@ router.get('/words', async (req, res) => {
 
 router.get('/words/new', (req, res) => {
   res.render('admin-word-form', { title: 'Add Word', word: null, errors: [] });
+});
+
+router.get('/words/batch', (req, res) => {
+  res.render('admin-batch-words', { title: 'Batch Add Words', text: '', errors: [], result: null });
+});
+
+router.post('/words/batch', async (req, res, next) => {
+  const text = typeof req.body.words === 'string' ? req.body.words : '';
+  const extractedWords = extractWords(text);
+
+  if (extractedWords.length === 0) {
+    return res.status(400).render('admin-batch-words', {
+      title: 'Batch Add Words',
+      text,
+      errors: ['Enter at least one word.'],
+      result: null
+    });
+  }
+
+  const uniqueWords = [...new Set(extractedWords)];
+  try {
+    const client = await db.connect();
+    let existingWords;
+    let insertedWords = [];
+    const skippedWords = [];
+    try {
+      await client.query('BEGIN');
+      await client.query('LOCK TABLE words IN SHARE ROW EXCLUSIVE MODE');
+      const existing = await client.query(
+        'SELECT lower(word) AS word FROM words WHERE lower(word) = ANY($1::text[])',
+        [uniqueWords]
+      );
+      existingWords = new Set(existing.rows.map(row => row.word));
+
+      for (const word of uniqueWords) {
+        if (existingWords.has(word)) continue;
+        const inserted = await client.query(
+          "INSERT INTO words (word, definition) VALUES ($1, '') ON CONFLICT (word) DO NOTHING RETURNING word",
+          [word]
+        );
+        if (inserted.rows[0]) insertedWords.push(inserted.rows[0].word);
+        else skippedWords.push(word);
+      }
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    res.render('admin-batch-words', {
+      title: 'Batch Add Words',
+      text,
+      errors: [],
+      result: {
+        extracted: extractedWords.length,
+        unique: uniqueWords.length,
+        existing: uniqueWords.filter(word => existingWords.has(word)).length,
+        inserted: insertedWords.length,
+        insertedWords,
+        failed: skippedWords
+      }
+    });
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
 });
 
 router.get('/words/:id/edit', async (req, res) => {

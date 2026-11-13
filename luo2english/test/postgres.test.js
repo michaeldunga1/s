@@ -76,6 +76,51 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
     }
     const duplicate = new Client();
     assert.match(await (await duplicate.post('/auth/register', { username: 'ALICE', email: 'new@example.test', password: 'password123', confirm_password: 'password123' })).text(), /already in use/);
+
+    assert.equal((await guest.post('/admin/words/batch', { words: 'guestword' })).status, 302);
+    assert.equal((await alice.post('/admin/words/batch', { words: 'userword' })).status, 403);
+    assert.equal((await adminClient.request('/admin/words/batch')).status, 200);
+    const batch = await adminClient.post('/admin/words/batch', {
+      words: 'Nying, BATCHWORD; (another-one)! batchword\n(another-one)'
+    });
+    assert.equal(batch.status, 200);
+    const batchHtml = await batch.text();
+    assert.match(batchHtml, /<strong>5<\/strong> words extracted/);
+    assert.match(batchHtml, /<strong>3<\/strong> unique words identified/);
+    assert.match(batchHtml, /<strong>1<\/strong> already in the dictionary/);
+    assert.match(batchHtml, /<strong>2<\/strong> new words inserted/);
+    assert.match(batchHtml, /batchword/);
+    assert.match(batchHtml, /another-one/);
+    const batchRows = await app.locals.db.query(
+      "SELECT lower(word) AS word FROM words WHERE lower(word) = ANY($1::text[]) ORDER BY word",
+      [['batchword', 'another-one']]
+    );
+    assert.deepEqual(batchRows.rows.map(row => row.word), ['another-one', 'batchword']);
+    assert.equal((await app.locals.db.query(
+      "SELECT count(*)::int AS n FROM words WHERE lower(word) IN ('batchword', 'another-one') AND trim(definition) = ''"
+    )).rows[0].n, 2);
+
+    const repeated = await adminClient.post('/admin/words/batch', {
+      words: 'BATCHWORD Another-One nying'
+    });
+    const repeatedHtml = await repeated.text();
+    assert.match(repeatedHtml, /<strong>3<\/strong> words extracted/);
+    assert.match(repeatedHtml, /<strong>3<\/strong> unique words identified/);
+    assert.match(repeatedHtml, /<strong>3<\/strong> already in the dictionary/);
+    assert.match(repeatedHtml, /<strong>0<\/strong> new words inserted/);
+    assert.equal((await app.locals.db.query(
+      "SELECT count(*)::int AS n FROM words WHERE lower(word) = 'batchword'"
+    )).rows[0].n, 1);
+
+    const batchWord = (await app.locals.db.query("SELECT id FROM words WHERE word = 'batchword'")).rows[0];
+    assert.equal((await adminClient.request(`/admin/words/${batchWord.id}/edit`)).status, 200);
+    assert.equal((await adminClient.post(`/admin/words/${batchWord.id}`, {
+      word: 'batchword', definition: 'Added later'
+    })).status, 302);
+    assert.equal((await app.locals.db.query(
+      'SELECT definition FROM words WHERE id = $1', [batchWord.id]
+    )).rows[0].definition, 'Added later');
+
     const attempts = await Promise.all([
       alice.json(`/comments/${word.id}`, 'POST', { body: 'first comment' }),
       alice.json(`/comments/${word.id}`, 'POST', { body: 'duplicate comment' })

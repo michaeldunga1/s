@@ -182,6 +182,8 @@ All foreign keys have corresponding indexes for performance.
 - `GET /admin/words` - Manage words
 - `GET /admin/words/new` - Add word form
 - `POST /admin/words` - Create word
+- `GET /admin/words/batch` - Batch add words form
+- `POST /admin/words/batch` - Extract, deduplicate, and insert new words
 - `GET /admin/words/:id/edit` - Edit word form
 - `POST /admin/words/:id` - Update word
 - `POST /admin/words/:id/delete` - Delete word

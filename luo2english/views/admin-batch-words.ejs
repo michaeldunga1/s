@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <li><a href="/admin">Admin</a></li>
+        <li><a href="/admin/users">Users</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+        <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="admin-header">
+      <h1 class="admin-title">Batch Add Words</h1>
+      <a href="/admin/words" class="btn btn-secondary">Back to Words</a>
+    </div>
+
+    <% if (errors && errors.length > 0) { %>
+      <% errors.forEach(error => { %>
+        <div class="alert alert-error"><%= error %></div>
+      <% }); %>
+    <% } %>
+
+    <% if (result) { %>
+      <div class="alert alert-success">Batch processing complete.</div>
+      <div class="card">
+        <div class="card-header">Summary</div>
+        <ul>
+          <li><strong><%= result.extracted %></strong> words extracted</li>
+          <li><strong><%= result.unique %></strong> unique words identified</li>
+          <li><strong><%= result.existing %></strong> already in the dictionary</li>
+          <li><strong><%= result.inserted %></strong> new words inserted</li>
+        </ul>
+
+        <% if (result.insertedWords.length > 0) { %>
+          <div class="card-header" style="margin-top: 1.5rem;">Newly inserted words</div>
+          <ul>
+            <% result.insertedWords.forEach(word => { %>
+              <li><%= word %></li>
+            <% }); %>
+          </ul>
+        <% } %>
+
+        <% if (result.failed && result.failed.length > 0) { %>
+          <div class="card-header" style="margin-top: 1.5rem;">Words that could not be processed</div>
+          <ul>
+            <% result.failed.forEach(word => { %>
+              <li><%= word %></li>
+            <% }); %>
+          </ul>
+        <% } %>
+      </div>
+    <% } %>
+
+    <div class="card" style="max-width: 760px; margin: 0 auto;">
+      <div class="card-header">Paste words</div>
+      <form method="POST" action="/admin/words/batch">
+        <div class="form-group">
+          <label for="words">Words</label>
+          <textarea id="words" name="words" rows="12" placeholder="Paste or type words separated by spaces, commas, or new lines"><%= text %></textarea>
+          <small style="color: #666;">Definitions are left empty; you can add them later from the word edit form.</small>
+        </div>
+        <button type="submit" class="btn btn-primary">Insert Words</button>
+        <a href="/admin/words" class="btn btn-secondary">Cancel</a>
+      </form>
+    </div>
+  </div>
+
+  <%- include('partials/legal-footer') %>
+</body>
+</html>
