@@ -59,12 +59,17 @@
 
           <div class="form-group">
             <label for="password">Password</label>
-            <input 
-              type="password" 
-              id="password" 
-              name="password" 
-              required
-            >
+            <div class="password-field">
+              <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                required
+              >
+              <button type="button" class="password-toggle" data-toggle-password="password" aria-label="Show password" aria-pressed="false" aria-controls="password">
+                <svg class="icon" aria-hidden="true"><use href="/icons.svg#eye"></use></svg>
+              </button>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
@@ -82,5 +87,7 @@
   </div>
 
   <%- include('partials/legal-footer') %>
+
+  <script src="/js/password-toggle.js"></script>
 </body>
 </html>
