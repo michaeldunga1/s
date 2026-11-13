@@ -1,119 +1,174 @@
-name: Deploy
+name: Luo2English Deployment
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "luo2english/**"
+      - "postgres-migration/**"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: production-deploy
+  group: luo2english-production
   cancel-in-progress: false
 
 jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: luo2english_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d luo2english_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "24"
           cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            **/package-lock.json
+          cache-dependency-path: luo2english/package-lock.json
 
-      - name: Determine changed apps
-        id: changed
-        env:
-          BASE_SHA: ${{ github.event.before }}
-          HEAD_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          if [ -z "${BASE_SHA:-}" ] || [[ "$BASE_SHA" =~ ^0+$ ]]; then
-            BASE_SHA="$(git rev-parse "$HEAD_SHA^" 2>/dev/null || git rev-list --max-parents=0 "$HEAD_SHA")"
-          fi
-          apps=""
-          while IFS= read -r dir; do
-            [ -n "$dir" ] || continue
-            if [ -f "$dir/package.json" ]; then
-              apps="${apps:+$apps,}$dir"
-            fi
-          done < <(git diff --name-only "$BASE_SHA" "$HEAD_SHA" | awk -F/ 'NF > 1 { print $1 }' | sort -u)
-          printf 'apps=%s\n' "$apps" >> "$GITHUB_OUTPUT"
-          printf 'Changed apps: %s\n' "${apps:-none}"
+      - name: Install dependencies
+        run: npm ci --prefix luo2english
 
-      - name: Test and build
+      - name: Run PostgreSQL integration tests
         env:
-          APPS: ${{ steps.changed.outputs.apps }}
-        run: |
-          set -euo pipefail
-          has_script() {
-            local dir="$1" script="$2"
-            node -e 'const p=require("./" + process.argv[1] + "/package.json"); process.exit(p.scripts && p.scripts[process.argv[2]] ? 0 : 1)' "$dir" "$script"
-          }
-          run_app() {
-            local dir="$1"
-            echo "::group::$dir"
-            npm --prefix "$dir" ci
-            if has_script "$dir" test; then
-              npm --prefix "$dir" test
-            else
-              echo "No test script in $dir"
-            fi
-            if has_script "$dir" build; then
-              npm --prefix "$dir" run build
-            fi
-            echo "::endgroup::"
-          }
-          if [ -f package.json ] && has_script . test; then
-            npm ci
-            npm test
-            if has_script . build; then
-              npm run build
-            fi
-          elif [ -n "$APPS" ]; then
-            IFS=',' read -ra dirs <<< "$APPS"
-            for dir in "${dirs[@]}"; do
-              run_app "$dir"
-            done
-          else
-            echo "No root test script and no changed app with a package.json; skipping tests"
-          fi
+          POSTGRES_TEST_URL: postgres://test:test@localhost:5432/luo2english_test
+        run: npm --prefix luo2english run test:postgres
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
+
     steps:
-      - name: Deploy over SSH
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
         env:
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
           DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
           DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           set -euo pipefail
+
+          test -n "$DEPLOY_SSH_KEY"
+          test -n "$DEPLOY_KNOWN_HOSTS"
+
           install -m 700 -d "$HOME/.ssh"
+
           printf '%s\n' "$DEPLOY_SSH_KEY" > "$HOME/.ssh/deploy_key"
           printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$HOME/.ssh/known_hosts"
-          chmod 600 "$HOME/.ssh/deploy_key" "$HOME/.ssh/known_hosts"
-          ssh -i "$HOME/.ssh/deploy_key" \
-            -o IdentitiesOnly=yes \
-            -o StrictHostKeyChecking=yes \
-            -o UserKnownHostsFile="$HOME/.ssh/known_hosts" \
-            -o BatchMode=yes \
-            -o ConnectTimeout=15 \
-            "$DEPLOY_USER@$DEPLOY_HOST" \
-            "cd '$DEPLOY_PATH' && bash deploy/deploy.sh"
+
+          chmod 600 "$HOME/.ssh/deploy_key"
+          chmod 600 "$HOME/.ssh/known_hosts"
+
+      - name: Validate deployment configuration
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+
+          test -n "$DEPLOY_HOST"
+          test -n "$DEPLOY_USER"
+          test -n "$DEPLOY_PATH"
+
+          echo "Deployment configuration is present."
+
+      - name: Transfer application files
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+
+          rsync -az \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='node_modules/' \
+            --exclude='db/*.db' \
+            --exclude='.git/' \
+            --exclude='backups/' \
+            -e "ssh -i $HOME/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile=$HOME/.ssh/known_hosts -o BatchMode=yes -o ConnectTimeout=15" \
+            luo2english/ \
+            "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH/"
+
+      - name: Install dependencies and restart application
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+
+          SSH_OPTS=(
+            -i "$HOME/.ssh/deploy_key"
+            -o IdentitiesOnly=yes
+            -o StrictHostKeyChecking=yes
+            -o UserKnownHostsFile="$HOME/.ssh/known_hosts"
+            -o BatchMode=yes
+            -o ConnectTimeout=15
+          )
+
+          ssh "${SSH_OPTS[@]}" "$DEPLOY_USER@$DEPLOY_HOST" \
+            "bash -s -- '$DEPLOY_PATH'" <<'REMOTE'
+          set -Eeuo pipefail
+
+          APP_DIR="$1"
+
+          cd "$APP_DIR"
+
+          echo "Checking production configuration..."
+
+          test -f .env
+          test -f package.json
+          test -f package-lock.json
+
+          echo "Installing production dependencies..."
+
+          npm ci --omit=dev --no-audit --no-fund
+
+          echo "Restarting Luo2English..."
+
+          pm2 restart luo2english --update-env
+
+          echo "Checking application health..."
+
+          for i in $(seq 1 30); do
+            if curl -fsS --max-time 5 http://127.0.0.1:3000/ >/dev/null; then
+              echo "Health check passed."
+              pm2 status luo2english
+              exit 0
+            fi
+
+            sleep 2
+          done
+
+          echo "ERROR: Application health check failed."
+          pm2 logs luo2english --lines 50 --nostream
+          exit 1
+          REMOTE
