@@ -19,8 +19,8 @@
             <li><a href="/admin">Admin</a></li>
             <li><a href="/admin/users">Users</a></li>
           <% } %>
-          <li><a href="/profile">Profile</a></li>
-          <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+          <li><a href="/profile" class="profile-link" aria-label="Profile"><svg class="icon user-icon" aria-hidden="true"><use href="/icons.svg#user"></use></svg></a></li>
+
           <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
         <% } else { %>
           <li><a href="/auth/login" class="btn-nav">Login</a></li>
