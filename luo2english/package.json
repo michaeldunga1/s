@@ -8,7 +8,7 @@
     "dev": "node app.js",
     "create-admin": "node scripts/create-admin.js",
     "test:unit": "node --test test/pagination.test.js test/rate-limit.test.js test/batch-words.test.js",
-    "test:postgres": "node --test test/postgres.test.js"
+    "test:postgres": "node --test test/postgres.test.js test/cleanup-words.test.js"
   },
   "keywords": [],
   "author": "",

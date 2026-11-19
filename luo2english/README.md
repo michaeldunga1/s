@@ -187,6 +187,8 @@ All foreign keys have corresponding indexes for performance.
 - `GET /admin/words/:id/edit` - Edit word form
 - `POST /admin/words/:id` - Update word
 - `POST /admin/words/:id/delete` - Delete word
+- `GET /admin/words/cleanup` - View words containing non-alphabetic characters with preview and mode filters
+- `POST /admin/words/cleanup` - Bulk remove words containing non-alphabetic characters
 - `GET /admin/words/:word_id/definitions` - Redirect to the word edit form
 
 ### Comments & Voting (JSON)

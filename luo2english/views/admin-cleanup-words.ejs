@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div>
+      <ul class="navbar-menu">
+        <li><a href="/">Dictionary</a></li>
+        <li><a href="/admin">Admin</a></li>
+        <li><a href="/admin/users">Users</a></li>
+        <li><a href="/profile">Profile</a></li>
+        <li><span class="navbar-user">Hello, <%= user.username %></span></li>
+        <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <div class="container">
+    <%- include('partials/flash') %>
+    <div class="admin-header">
+      <h1 class="admin-title">Remove Non-Alphabetic Words</h1>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="/admin/words" class="btn btn-secondary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#arrow-left"></use></svg> Manage Words</a>
+        <a href="/admin" class="btn btn-secondary"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#list"></use></svg> Dashboard</a>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom: 1.5rem;">
+      <div class="card-header">Cleanup Filter Mode</div>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; padding: 0.5rem 0;">
+        <a href="/admin/words/cleanup?mode=safe" class="btn <%= mode === 'safe' ? 'btn-primary' : 'btn-secondary' %>">
+          Preserve Luo Apostrophes &amp; Hyphens
+          <span style="background: rgba(0,0,0,0.15); padding: 0.15rem 0.5rem; border-radius: 12px; margin-left: 0.5rem; font-size: 0.85em;"><%= safeCount %></span>
+        </a>
+        <a href="/admin/words/cleanup?mode=strict" class="btn <%= mode === 'strict' ? 'btn-primary' : 'btn-secondary' %>">
+          Strict Non-Alphabetic (All Non-Letters)
+          <span style="background: rgba(0,0,0,0.15); padding: 0.15rem 0.5rem; border-radius: 12px; margin-left: 0.5rem; font-size: 0.85em;"><%= strictCount %></span>
+        </a>
+      </div>
+      <p style="margin-top: 0.75rem; margin-bottom: 0; color: #666; font-size: 0.9em;">
+        <% if (mode === 'safe') { %>
+          <strong>Safe Mode (Recommended):</strong> Identifies words containing numbers, underscores, punctuation, or symbols (e.g. <code>1kar</code>, <code>26</code>, <code>test_word</code>), while safely preserving valid Dholuo words with internal apostrophes and hyphens (e.g. <code>ng'ato</code>, <code>mang’ongo</code>, <code>well-being</code>).
+        <% } else { %>
+          <strong>Strict Mode:</strong> Identifies any word containing any character other than alphabetic letters (A–Z). This will include words with numbers as well as words with apostrophes or hyphens.
+        <% } %>
+      </p>
+    </div>
+
+    <% if (pagination.totalItems > 0) { %>
+      <div class="card" style="border-left: 4px solid #C9453A; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3 style="margin: 0 0 0.5rem 0; color: #C9453A;">
+              <svg class="icon" aria-hidden="true" style="vertical-align: middle; margin-right: 0.25rem;"><use href="/icons.svg#alert-triangle"></use></svg>
+              <%= pagination.totalItems %> word<%= pagination.totalItems === 1 ? '' : 's' %> flagged for removal
+            </h3>
+            <p style="margin: 0; color: #555; font-size: 0.95em;">
+              Deleting these words will permanently remove them from the dictionary along with any associated comments and votes.
+            </p>
+          </div>
+          <form method="POST" action="/admin/words/cleanup" onsubmit="return confirm('Are you sure you want to permanently delete all <%= pagination.totalItems %> matching words? This action cannot be undone.');">
+            <input type="hidden" name="_csrf" value="<%= token %>">
+            <input type="hidden" name="mode" value="<%= mode %>">
+            <button type="submit" class="btn btn-danger">
+              <svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#trash"></use></svg>
+              Delete All <%= pagination.totalItems %> Words
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <p class="pagination-summary" role="status">
+        <svg class="icon pagination-icon" aria-hidden="true"><use href="/icons.svg#list"></use></svg>
+        <span>Showing <%= pagination.firstItem %>–<%= pagination.lastItem %> of <%= pagination.totalItems %> word<%= pagination.totalItems === 1 ? '' : 's' %> matching filter.</span>
+      </p>
+
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Word</th>
+              <th>Definition</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% words.forEach(word => { %>
+              <tr>
+                <td><strong><%= word.word %></strong></td>
+                <td style="white-space: pre-wrap;"><%= word.definition || 'No definition yet' %></td>
+                <td>
+                  <a href="/word/<%= word.id %>" class="btn-link action-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#eye"></use></svg> View</a>
+                  <a href="/admin/words/<%= word.id %>/edit" class="btn-link action-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#pencil"></use></svg> Edit</a>
+                  <form method="POST" action="/admin/words/<%= word.id %>/delete" style="display: inline;">
+                    <input type="hidden" name="returnTo" value="cleanup">
+                    <button type="submit" class="btn-link action-link" style="color: #C9453A; cursor: pointer; border: none; background: none; padding: 0;" onclick="return confirm('Delete this word?')"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#trash"></use></svg> Delete</button>
+                  </form>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <%- include('partials/pagination', { pagination, pageUrl }) %>
+    <% } else { %>
+      <div class="card" style="text-align: center; padding: 2rem; margin-bottom: 1.5rem;">
+        <p style="margin: 0; color: #2e7d32; font-weight: 500;">
+          ✓ No words containing non-alphabetic characters found under <%= mode === 'safe' ? 'safe' : 'strict' %> mode.
+        </p>
+        <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.9em;">
+          The dictionary is clean according to the current filter criteria. Total dictionary words: <%= totalWords %>.
+        </p>
+      </div>
+    <% } %>
+  </div>
+
+  <%- include('partials/legal-footer') %>
+</body>
+</html>

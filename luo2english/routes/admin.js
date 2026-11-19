@@ -219,6 +219,89 @@ router.post('/words/batch', async (req, res, next) => {
   }
 });
 
+router.get('/words/cleanup', async (req, res) => {
+  try {
+    const mode = req.query.mode === 'strict' ? 'strict' : 'safe';
+    const strictPattern = '[^[:alpha:]]';
+    const safePattern = '[^[:alpha:]\'’\\-]';
+    const selectedPattern = mode === 'strict' ? strictPattern : safePattern;
+
+    const [
+      { rows: [{ count: safeCount }] },
+      { rows: [{ count: strictCount }] },
+      { rows: [{ count: totalWords }] }
+    ] = await Promise.all([
+      db.query('SELECT count(*)::int AS count FROM words WHERE word ~ $1', [safePattern]),
+      db.query('SELECT count(*)::int AS count FROM words WHERE word ~ $1', [strictPattern]),
+      db.query('SELECT count(*)::int AS count FROM words')
+    ]);
+
+    const activeCount = mode === 'strict' ? strictCount : safeCount;
+    const pageSize = 50;
+    const page = parsePage(req.query.page);
+    const pagination = paginate({ page, pageSize, totalItems: activeCount });
+
+    const { rows: words } = await db.query(
+      'SELECT id, word, definition, created_at FROM words WHERE word ~ $1 ORDER BY word ASC LIMIT $2 OFFSET $3',
+      [selectedPattern, pageSize, pagination.offset]
+    );
+
+    if (!req.session.cleanupWordsToken) {
+      req.session.cleanupWordsToken = crypto.randomBytes(32).toString('hex');
+    }
+
+    const pageUrl = targetPage => `/admin/words/cleanup?mode=${mode}${targetPage > 1 ? `&page=${targetPage}` : ''}`;
+
+    res.render('admin-cleanup-words', {
+      title: 'Remove Non-Alphabetic Words',
+      mode,
+      safeCount,
+      strictCount,
+      totalWords,
+      words,
+      pagination,
+      pageUrl,
+      token: req.session.cleanupWordsToken
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render('error', { message: 'Failed to load cleanup words page' });
+  }
+});
+
+router.post('/words/cleanup', async (req, res, next) => {
+  if (typeof req.body?._csrf !== 'string' || !req.session.cleanupWordsToken || req.body._csrf !== req.session.cleanupWordsToken) {
+    return res.status(403).render('error', { message: 'Invalid or expired form. Reload the page and try again.' });
+  }
+
+  const mode = req.body.mode === 'strict' ? 'strict' : 'safe';
+  const pattern = mode === 'strict' ? '[^[:alpha:]]' : '[^[:alpha:]\'’\\-]';
+
+  try {
+    const client = await db.connect();
+    let deletedCount = 0;
+    try {
+      await client.query('BEGIN');
+      const result = await client.query('DELETE FROM words WHERE word ~ $1 RETURNING id', [pattern]);
+      deletedCount = result.rowCount;
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK').catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    req.session.cleanupWordsToken = null;
+    const label = mode === 'strict' ? 'strictly non-alphabetic characters' : 'non-alphabetic characters (excluding Luo apostrophes/hyphens)';
+    setFlash(req, 'success', `Successfully removed ${deletedCount} word${deletedCount === 1 ? '' : 's'} containing ${label}.`);
+    res.redirect(`/admin/words/cleanup?mode=${mode}`);
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+});
+
 router.get('/words/:id/edit', async (req, res) => {
   try {
     const word = (await db.query('SELECT * FROM words WHERE id = $1', [req.params.id])).rows[0];
@@ -266,7 +349,8 @@ router.post('/words/:id/delete', async (req, res) => {
   try {
     const result = await db.query('DELETE FROM words WHERE id = $1', [req.params.id]);
     setFlash(req, 'success', result.rowCount ? 'Word deleted.' : 'Word not found.');
-    res.redirect('/admin/words');
+    const returnTo = typeof req.body?.returnTo === 'string' && req.body.returnTo === 'cleanup' ? '/admin/words/cleanup' : '/admin/words';
+    res.redirect(returnTo);
   } catch (error) {
     console.error(error);
     res.status(500).render('error', { message: 'Failed to delete word' });
