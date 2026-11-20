@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title><%= title %> - Luo2English</title>
   <meta name="description" content="<%= description %>">
   <meta name="robots" content="index,follow">
@@ -16,9 +16,11 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <meta name="theme-color" content="#684728">
   <link rel="stylesheet" href="/css/style.css">
+  <%- include('partials/adsense-head') %>
 </head>
 <body>
-  <nav class="navbar"><div class="container"><div class="navbar-brand"><a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a></div></div></nav>
+  <%- include('partials/navbar', { user }) %>
+
   <main class="container">
     <article class="card">
       <h1><%= title %></h1>
@@ -51,6 +53,10 @@
       <% } %>
     </article>
   </main>
+
+  <%- include('partials/ad-footer') %>
   <%- include('partials/legal-footer') %>
+
+  <script src="/js/app.js"></script>
 </body>
 </html>

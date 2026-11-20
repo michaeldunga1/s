@@ -1,0 +1,21 @@
+<nav class="navbar">
+  <div class="container">
+    <a href="/" class="logo" aria-label="Luo2English Home">
+      <svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg>
+      <span>Luo2English</span>
+    </a>
+    <ul class="navbar-menu">
+      <li><a href="/">Dictionary</a></li>
+      <% if (user) { %>
+        <% if (user.role === 'admin') { %>
+          <li><a href="/admin">Admin</a></li>
+        <% } %>
+        <li><a href="/profile" class="profile-link" aria-label="Profile"><svg class="icon user-icon" aria-hidden="true"><use href="/icons.svg#user"></use></svg></a></li>
+        <li><a href="/auth/logout">Logout</a></li>
+      <% } else { %>
+        <li><a href="/auth/login">Login</a></li>
+        <li><a href="/auth/register" class="btn-nav-primary">Register</a></li>
+      <% } %>
+    </ul>
+  </div>
+</nav>

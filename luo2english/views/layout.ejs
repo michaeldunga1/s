@@ -8,28 +8,7 @@
   <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <div class="navbar-brand">
-        <a href="/" class="logo"><svg class="icon brand-icon" aria-hidden="true"><use href="/icons.svg#dictionary"></use></svg> Luo2English</a>
-      </div>
-      <ul class="navbar-menu">
-        <li><a href="/">Dictionary</a></li>
-        <% if (user) { %>
-          <% if (user.role === 'admin') { %>
-            <li><a href="/admin">Admin</a></li>
-            <li><a href="/admin/users">Users</a></li>
-          <% } %>
-          <li><a href="/profile" class="profile-link" aria-label="Profile"><svg class="icon user-icon" aria-hidden="true"><use href="/icons.svg#user"></use></svg></a></li>
-
-          <li><a href="/auth/logout" class="btn-logout">Logout</a></li>
-        <% } else { %>
-          <li><a href="/auth/login" class="btn-nav">Login</a></li>
-          <li><a href="/auth/register" class="btn-nav btn-nav-primary">Register</a></li>
-        <% } %>
-      </ul>
-    </div>
-  </nav>
+  <%- include('partials/navbar', { user }) %>
 
   <!-- Header Ad Slot -->
   <div class="ad-slot ad-header">

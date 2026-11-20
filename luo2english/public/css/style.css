@@ -37,9 +37,9 @@ body {
 .navbar {
   background-color: var(--primary);
   color: white;
-  padding: 1rem 0;
+  padding: 0.75rem 0;
   box-shadow: 0 2px 4px var(--shadow);
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .navbar .container {
@@ -48,17 +48,26 @@ body {
   align-items: center;
 }
 
-.navbar-brand .logo {
-  font-size: 1.5rem;
+.navbar .logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
   font-weight: bold;
   color: white;
   text-decoration: none;
 }
 
+.navbar .brand-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: #f5d6a5;
+}
+
 .navbar-menu {
   list-style: none;
   display: flex;
-  gap: 1.5rem;
+  gap: 1rem;
   align-items: center;
 }
 
@@ -67,37 +76,33 @@ body {
 .navbar-menu a {
   color: white;
   text-decoration: none;
-  transition: opacity 0.3s;
+  padding: 0.4rem 0.75rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
 }
 
 .navbar-menu a:hover {
-  opacity: 0.8;
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
-.navbar-user {
-  color: white;
-  font-size: 0.9rem;
+.navbar-menu a[aria-current="page"] {
+  background-color: rgba(255, 255, 255, 0.2);
 }
 
-.btn-logout {
-  background-color: var(--accent);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
+.profile-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.btn-nav {
-  background-color: transparent;
-  border: 2px solid white;
-  padding: 0.4rem 1rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-  display: inline-block;
-}
-
-.btn-nav-primary {
-  background-color: var(--accent);
-  border-color: var(--accent);
+.user-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 /* Footer */
