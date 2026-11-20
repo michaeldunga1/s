@@ -35,6 +35,79 @@ pm2 start ecosystem.config.js  # or use individual pm2 start commands
 
 ---
 
+## GitHub & SSH Access
+
+### Push to GitHub
+
+```bash
+# From local development machine
+cd /home/dunga/s
+
+# Add remote if not already added
+git remote add origin git@github.com:michaeldunga1/s.git
+
+# Or use HTTPS
+# git remote add origin https://github.com/michaeldunga1/s.git
+
+# Push to main branch
+git push -u origin main
+
+# Push to deployment branch (used by deploy script)
+git push -u origin cursor/automated-deploy
+
+# Push all branches
+git push --all origin
+```
+
+### SSH to Production Server
+
+```bash
+# Basic SSH
+ssh deploy@your-server-ip
+
+# With SSH key (recommended)
+ssh -i ~/.ssh/id_ed25519 deploy@your-server-ip
+
+# Using SSH config (~/.ssh/config)
+# Host prod
+#   HostName your-server-ip
+#   User deploy
+#   IdentityFile ~/.ssh/id_ed25519
+#   Port 22
+# Then simply:
+ssh prod
+```
+
+### Setup SSH Key on Server
+
+```bash
+# On local machine - generate key if needed
+ssh-keygen -t ed25519 -C "deploy@yourdomain.com"
+
+# Copy public key to server
+ssh-copy-id deploy@your-server-ip
+
+# Or manually:
+# cat ~/.ssh/id_ed25519.pub | ssh deploy@your-server-ip "mkdir -p ~/.ssh && cat >> ~/.ssh/authorized_keys"
+```
+
+### GitHub Deploy Key (for CI/CD)
+
+```bash
+# On server - generate deploy key
+ssh-keygen -t ed25519 -f ~/.ssh/github_deploy -C "github-deploy@yourdomain.com"
+
+# Add public key to GitHub repo:
+# Settings → Deploy keys → Add deploy key
+# Paste content of ~/.ssh/github_deploy.pub
+# Allow write access if deploying from CI
+
+# Use with git
+git config --global core.sshCommand "ssh -i ~/.ssh/github_deploy -o IdentitiesOnly=yes"
+```
+
+---
+
 ## Production Deployment
 
 ### Server Requirements
@@ -79,8 +152,13 @@ EOF
 ```bash
 sudo -u deploy -i
 cd /home/deploy
-git clone <repo-url> s
+
+# Using SSH (requires deploy key setup - see GitHub & SSH Access section)
+git clone git@github.com:michaeldunga1/s.git s
 cd s
+
+# Or using HTTPS
+# git clone https://github.com/michaeldunga1/s.git s
 ```
 
 ### 3. Install Dependencies
