@@ -357,6 +357,20 @@ router.post('/words/:id/delete', async (req, res) => {
   }
 });
 
+router.post('/words/cleanup-non-alphabetic', async (req, res) => {
+  try {
+    const result = await db.query(`
+      DELETE FROM words
+      WHERE word ~ '^[^a-zA-Z]' OR word ~ '[^a-zA-Z]$'
+    `);
+    setFlash(req, 'success', `Deleted ${result.rowCount} word(s) starting or ending with non-alphabetic characters.`);
+    res.redirect('/admin/words');
+  } catch (error) {
+    console.error(error);
+    res.status(500).render('error', { message: 'Failed to clean up words' });
+  }
+});
+
 router.get('/words/:word_id/definitions', (req, res) => res.redirect(`/admin/words/${req.params.word_id}/edit`));
 
 module.exports = router;

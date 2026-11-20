@@ -66,6 +66,13 @@
         <li><a href="/admin/users" class="btn-link" style="color: #D4A574;"><svg class="icon action-icon" aria-hidden="true"><use href="/icons.svg#conversation"></use></svg> Manage Users</a></li>
       </ul>
     </div>
+
+    <div class="card">
+      <div class="card-header">Cleanup</div>
+      <form method="POST" action="/admin/words/cleanup-non-alphabetic" style="display: inline;">
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Delete all words starting or ending with non-alphabetic characters? This cannot be undone.')"><svg class="icon btn-icon" aria-hidden="true"><use href="/icons.svg#trash"></use></svg> Cleanup Non-Alphabetic Words</button>
+      </form>
+    </div>
   </div>
 
   <%- include('partials/legal-footer') %>

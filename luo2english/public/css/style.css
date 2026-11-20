@@ -320,33 +320,49 @@ textarea {
   gap: 1.5rem;
 }
 
-.word-card {
+.words-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.word-link {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
   background-color: white;
-  border: 2px solid var(--secondary);
-  border-radius: 8px;
-  padding: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
   text-decoration: none;
   color: inherit;
-  transition: all 0.3s;
-  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.word-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px var(--shadow);
+.word-link:hover {
+  background-color: #fafaf5;
   border-color: var(--primary);
+  box-shadow: 0 2px 4px var(--shadow);
 }
 
-.word-card-title {
-  font-size: 1.5rem;
-  font-weight: bold;
+.word-text {
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--primary-dark);
-  margin-bottom: 0.5rem;
+  min-width: 180px;
 }
 
-.word-card-meta {
+.word-definition {
   font-size: 0.9rem;
-  color: #666;
+  color: #555;
+  flex: 1;
+  margin-left: 1rem;
+}
+
+.word-no-definition {
+  font-size: 0.9rem;
+  color: #999;
+  font-style: italic;
+  margin-left: 1rem;
 }
 
 /* Definition detail */
@@ -779,32 +795,101 @@ td form .action-link {
   @media (max-width: 768px) {
     .navbar .container { align-items: flex-start; }
     .navbar-menu { flex-direction: row; gap: .75rem; }
+    .navbar-menu { flex-direction: column; gap: 0.5rem; }
+    .words-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr 1fr; }
+    .admin-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
   }
   @media (max-width: 550px) {
     .dictionary-hero { padding: 1.5rem; }
     .hero-illustration { display: none; }
     .words-grid { grid-template-columns: minmax(0, 1fr); }
+    .word-text { min-width: 120px; font-size: 1rem; }
+    .word-definition, .word-no-definition { font-size: 0.85rem; margin-left: 0.5rem; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition-duration: 0s !important; scroll-behavior: auto !important; }
   }
 
-  .navbar-menu {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
+/* Word detail share links */
+.share-links {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
 
-  .words-grid {
-    grid-template-columns: 1fr;
-  }
+.share-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: var(--secondary);
+  border: 1px solid var(--border);
+  color: var(--primary-dark);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
 
-  .stats-grid {
-    grid-template-columns: 1fr 1fr;
-  }
+.share-btn:hover {
+  background-color: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: translateY(-2px);
+}
 
-  .admin-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
+.share-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* AdSense Ad Slots */
+.ad-slot {
+  margin: 1.5rem 0;
+  text-align: center;
+  min-height: 90px;
+}
+
+.ad-slot ins {
+  display: block;
+  margin: 0 auto;
+}
+
+.ad-header {
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+.ad-footer {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.ad-in-content {
+  margin: 2rem 0;
+  clear: both;
+}
+
+@media (max-width: 768px) {
+  .ad-slot {
+    margin: 1rem 0;
+    min-height: 80px;
+  }
+  
+  .ad-header {
+    margin-top: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .ad-in-content {
+    margin: 1.5rem 0;
   }
 }

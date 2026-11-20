@@ -92,10 +92,10 @@ router.get('/', async (req, res) => {
     const pageSize = 24;
     const page = parsePage(req.query.page);
     const params = [];
-    let where = '';
+    let where = 'WHERE trim(definition) <> \'\'';
     if (query) {
       params.push(query);
-      where = 'WHERE position(lower($1) in lower(word)) > 0 OR position(lower($1) in lower(definition)) > 0';
+      where += ' AND (position(lower($1) in lower(word)) > 0 OR position(lower($1) in lower(definition)) > 0)';
     }
 
     const { rows: [{ n: totalItems }] } = await db.query(`SELECT count(*)::int AS n FROM words ${where}`, params);
@@ -120,6 +120,54 @@ router.get('/', async (req, res) => {
       title: 'Luo to English Dictionary | Luo2English',
       metaDescription: 'Explore the Luo to English dictionary. Search Dholuo words, discover English meanings, and learn with a community of speakers.',
       canonicalUrl: 'https://swiftener.com/',
+      robots: req.query.q !== undefined ? 'noindex,follow' : 'index,follow'
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).render('error', {
+      message: 'Failed to load words'
+    });
+  }
+});
+
+// All words page - includes words without definitions
+router.get('/all', async (req, res) => {
+  try {
+    if (req.query.q !== undefined && typeof req.query.q !== 'string') return res.status(400).send('Invalid search query.');
+    const query = (req.query.q || '').trim();
+    if (query.length > 200) return res.status(400).send('Search query must be at most 200 characters.');
+    const pageSize = 24;
+    const page = parsePage(req.query.page);
+    const params = [];
+    let where = '';
+    if (query) {
+      params.push(query);
+      where = 'WHERE position(lower($1) in lower(word)) > 0 OR position(lower($1) in lower(definition)) > 0';
+    }
+
+    const { rows: [{ n: totalItems }] } = await db.query(`SELECT count(*)::int AS n FROM words ${where}`, params);
+    const pager = paginate({ page, pageSize, totalItems });
+    const result = await db.query(
+      `SELECT id, word, definition FROM words ${where} ORDER BY word ASC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+      [...params, pageSize, pager.offset]
+    );
+    const pageUrl = targetPage => {
+      const search = new URLSearchParams();
+      if (query) search.set('q', query);
+      if (targetPage > 1) search.set('page', String(targetPage));
+      const suffix = search.toString();
+      return suffix ? `/all?${suffix}` : '/all';
+    };
+
+    res.render('index', {
+      words: result.rows,
+      query,
+      pagination: pager,
+      pageUrl,
+      showAllWords: true,
+      title: 'All Words | Luo to English Dictionary',
+      metaDescription: 'Browse all Luo words including those without definitions.',
+      canonicalUrl: 'https://swiftener.com/all',
       robots: req.query.q !== undefined ? 'noindex,follow' : 'index,follow'
     });
   } catch (error) {

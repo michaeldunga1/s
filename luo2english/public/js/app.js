@@ -121,3 +121,18 @@ function toggleEditMode(commentId) {
     editEl.style.display = 'block';
   }
 }
+
+function copyLink(url) {
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = event.currentTarget;
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<svg class="icon share-icon" aria-hidden="true"><use href="/icons.svg#check"></use></svg>';
+    btn.title = 'Copied!';
+    setTimeout(() => {
+      btn.innerHTML = originalHTML;
+      btn.title = 'Copy link';
+    }, 2000);
+  }).catch(() => {
+    alert('Failed to copy link');
+  });
+}

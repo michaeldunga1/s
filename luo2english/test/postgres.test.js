@@ -148,36 +148,36 @@ test('PostgreSQL application preserves dictionary, accounts, voting and sessions
       "SELECT count(*)::int AS n FROM words WHERE word LIKE 'limitword%'"
     )).rows[0].n, 0);
 
-    await app.locals.db.query(`
+await app.locals.db.query(`
       INSERT INTO words (word, definition)
-      SELECT 'paginationword' || lpad(i::text, 2, '0'), ''
+      SELECT 'paginationword' || lpad(i::text, 2, '0'), 'A test definition for word ' || lpad(i::text, 2, '0')
       FROM generate_series(1, 55) AS i
     `);
     const homePage1 = await (await guest.request('/')).text();
-    assert.equal((homePage1.match(/class="word-card"/g) || []).length, 24);
-    assert.match(homePage1, /Showing 1–24 of 58 words/);
+    assert.equal((homePage1.match(/class="word-link"/g) || []).length, 24);
+    assert.match(homePage1, /Showing 1–24 of 56 words/);
     assert.match(homePage1, /href="\/\?page=2"/);
     assert.match(homePage1, /icons\.svg#chevron-right/);
     assert.match(homePage1, /icons\.svg#list/);
     const homePage2 = await (await guest.request('/?page=2')).text();
-    assert.equal((homePage2.match(/class="word-card"/g) || []).length, 24);
-    assert.match(homePage2, /Showing 25–48 of 58 words/);
+    assert.equal((homePage2.match(/class="word-link"/g) || []).length, 24);
+    assert.match(homePage2, /Showing 25–48 of 56 words/);
     assert.match(homePage2, /href="\/\?page=3"/);
     const homePage3 = await (await guest.request('/?page=3')).text();
-    assert.equal((homePage3.match(/class="word-card"/g) || []).length, 10);
-    assert.match(homePage3, /Showing 49–58 of 58 words/);
+    assert.equal((homePage3.match(/class="word-link"/g) || []).length, 8);
+    assert.match(homePage3, /Showing 49–56 of 56 words/);
     assert.doesNotMatch(homePage3, /href="\/\?page=4"/);
     const clamped = await (await guest.request('/?page=999')).text();
-    assert.equal((clamped.match(/class="word-card"/g) || []).length, 10);
-    assert.match(clamped, /Showing 49–58 of 58 words/);
-    assert.equal((await (await guest.request('/?page=abc')).text()).match(/class="word-card"/g).length, 24);
+    assert.equal((clamped.match(/class="word-link"/g) || []).length, 8);
+    assert.match(clamped, /Showing 49–56 of 56 words/);
+    assert.equal((await (await guest.request('/?page=abc')).text()).match(/class="word-link"/g).length, 24);
 
     const searchPage1 = await (await guest.request('/?q=paginationword')).text();
-    assert.equal((searchPage1.match(/class="word-card"/g) || []).length, 24);
+    assert.equal((searchPage1.match(/class="word-link"/g) || []).length, 24);
     assert.match(searchPage1, /Showing 1–24 of 55 words matching paginationword/);
     assert.match(searchPage1, /href="\/\?q=paginationword&amp;page=2"/);
     const searchPage3 = await (await guest.request('/?q=paginationword&page=3')).text();
-    assert.equal((searchPage3.match(/class="word-card"/g) || []).length, 7);
+    assert.equal((searchPage3.match(/class="word-link"/g) || []).length, 7);
     assert.match(searchPage3, /Showing 49–55 of 55 words matching paginationword/);
 
     const adminWordsPage1 = await (await adminClient.request('/admin/words')).text();
